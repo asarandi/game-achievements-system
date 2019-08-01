@@ -1,8 +1,8 @@
 --table achievements
-achievement_id (int)|    title (text)       | description(text)   | profile_img (text)    | created(datetime)
+achievement_id (int)|    title (text)       | description(text)   | img (text)            | created(datetime)
 
 --table members
-member_id (int)     |    member_name(text)  | profile_img(text)   | created(datetime)
+member_id (int)     |    member_name(text)  | img(text)           | created(datetime)
 
 --table member_achievements
 member_id (int)     |    achievement_id(int)| created(datetime)
