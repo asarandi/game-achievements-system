@@ -1,5 +1,5 @@
 /createAchievement
-    params:     title, description, img (optional)
+    params:     slug (mandatory), title, description, img (optional)
     info:       developer api;
                 insert into `achievements` table
     return:     result, achievement_id
