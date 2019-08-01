@@ -1,3 +1,5 @@
 ._*
 .DS_*
 *.sw*
+database.sqlite
+listen

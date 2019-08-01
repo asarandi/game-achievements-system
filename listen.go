@@ -1,66 +1,73 @@
 package main
 
 import (
-    "io"
     "log"
     "fmt"
+    "strings"
     "net/http"
+    "database/sql"
     "encoding/json"
     "github.com/gorilla/mux"
+    _"github.com/mattn/go-sqlite3"
 )
 
-//
-//    /createAchievement
-//    params:     slug (mandatory), title, description, img (optional)
-//
-
-
-
-type CreateAchievementRequest struct {
+type Achievement struct {
     Slug            string  `json:"slug"`
     Title           string  `json:"title"`
-    Description     string  `json:"description"`
+    Desc            string  `json:"desc"`
     Img             string  `json:"img"`
 }
 
-type ResponseError struct {
-    Result  string  `json:"result"`
-    Info    string  `json:"info"`
+type Response struct {
+    Success         string  `json:"success"`
+    Message         string  `json:"message"`
 }
 
-func createAchievementHandler(w http.ResponseWriter, r *http.Request) {
-    if r.Method != "POST" {
+func dbInit() {
+    db, err := sql.Open("sqlite3", "file:./database.sqlite?cache=shared&mode=rwc")
+	if err != nil {
+		log.Fatal(err)
+	}
+    defer db.Close()
+
+	sqlStmt := `
+	create table if not exists achievements        (id integer primary key, slug text, title text, desc text, img text, created datetime);
+	create table if not exists members             (id integer primary key, name text, img text, created datetime);
+	create table if not exists member_achievements (id integer, achievement_id integer, created datetime);
+	create table if not exists teams               (id integer primary key, name text, img text, created datetime);
+	create table if not exists team_members        (id integer, member_id integer, created datetime);
+	create table if not exists games               (id integer primary key, created datetime);    
+	create table if not exists game_stats          (id integer, team_id integer, member_id integer, num_attacks integer, num_hits integer, amount_damage integer, num_kills integer, num_assists integer, num_spells integer, spells_damage integer, finished datetime, is_winner integer);
+	`
+	_, err = db.Exec(sqlStmt)
+	if err != nil {
+		log.Printf("%q: %s\n", err, sqlStmt)
+		return
+	}
+}
+
+
+func createAchievement(w http.ResponseWriter, r *http.Request) {
+    decoder := json.NewDecoder(r.Body)
+    var a Achievement
+    err := decoder.Decode(&a)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusBadRequest)
         return
     }
-    body := make([]byte, r.ContentLength)
-    n, err := r.Body.Read(body)
-    if err != io.EOF {
-        log.Fatal(err.Error())
-    }
-    if n == 0 {
+    a.Slug = strings.TrimSpace(a.Slug)
+    if a.Slug == "" {
+        http.Error(w, "missing \"slug\" field in JSON", http.StatusBadRequest)
         return
     }
     w.Header().Set("content-type", "application/json")
-    var req CreateAchievementRequest
-    if err = json.Unmarshal(body, &req); err != nil {
-        js, _ := json.Marshal(ResponseError{"error", err.Error()})
-        w.Write(js)
-        return
-    }
-    if len(req.Slug) == 0 {
-        js, _ := json.Marshal(ResponseError{"error", "slug cannot be empty"})
-        w.Write(js)
-        return
-    }
-    fmt.Println(req)
+    fmt.Println(a)
 }
 
-
-
-
-
 func main() {
-    http.HandleFunc("/createAchievement", createAchievementHandler)
+    dbInit()
+    r := mux.NewRouter()
+    r.HandleFunc("/achievements", createAchievement).Methods("POST")
 
-    log.Fatal(http.ListenAndServe(":4242", nil))
+    log.Fatal(http.ListenAndServe(":4242", r))
 }
