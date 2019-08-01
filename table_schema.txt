@@ -1,22 +1,22 @@
---table players
-player id           |       login       |   email           |   profile img
-
-
 --table achievements
-achievement id      |       title       |   description     |   img
+achievement_id (int)|    title (text)       | description(text)   | profile_img (text)    | created(datetime)
 
+--table members
+member_id (int)     |    member_name(text)  | profile_img(text)   | created(datetime)
 
---table player_bagdes
-achievement id      |       player id   |   time
-
+--table member_achievements
+member_id (int)     |    achievement_id(int)| created(datetime)
 
 --table teams
+team_id (int)       |    team_name (text)   | profile_img(text)   | created(datetime)
 
---table game sessions
+--table team_members
+team_id (int)       |    member_id(int)     | created(datetime)
 
+--table games
+game_id             |    created(datetime)
 
+--table game_stats
+game_id             |    team_id            | member_id           | num_attacks           | num_hits              |   amount_damage   | num_kills | instant_kills    | num_assists   | num_spells    |  spells_damage   |   finished(datetime)    | is_winner
 
-
-
-game id     team id     player id
 

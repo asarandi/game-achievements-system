@@ -15,7 +15,7 @@
 
 .historical statistics are maintained
 .each player is credited with win/loss based upon the performance of his/her team
-.total number of games player
+.total number of games played
 .total duration of games played
 .total number of kills
 
@@ -27,6 +27,8 @@ must include the following achievements:
 “sharpshooter award” – a user receives this for landing 75% of their attacks, assuming they have at least attacked once.
 “bruiser” award – a user receives this for doing more than 500 points of damage in one game
 “veteran” award – a user receives this for playing more than 1000 games in their lifetime.
-“big winner” award – a user receives this for having 200 wins your system should be extensible in the following ways:
+“big winner” award – a user receives this for having 200 wins
+
+system should be extensible in the following ways:
 the system must easily handle the tracking of additional statistics at any level listed above (historical by player or game-specific by player)
 the system must easily handle the addition of new achievements add a new statistic, and create a new achievement utilising this statistic in conjunction to one of the other statistics defined above.
