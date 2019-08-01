@@ -6,6 +6,7 @@ import (
     "fmt"
     "net/http"
     "encoding/json"
+    "github.com/gorilla/mux"
 )
 
 //
@@ -28,24 +29,35 @@ type ResponseError struct {
 }
 
 func createAchievementHandler(w http.ResponseWriter, r *http.Request) {
+    if r.Method != "POST" {
+        return
+    }
     body := make([]byte, r.ContentLength)
     n, err := r.Body.Read(body)
-    if err == io.EOF && n > 0  {
-        w.Header().Set("content-type", "application/json")
-        var req CreateAchievementRequest
-        if err = json.Unmarshal(body, &req); err != nil {
-            js, _ := json.Marshal(ResponseError{"error", err.Error()})
-            w.Write(js)
-            return
-        }
-        if len(req.Slug) < 1 {
-            js, _ := json.Marshal(ResponseError{"error", "slug cannot be empty"})
-            w.Write(js)
-            return
-        }
-        fmt.Println(req)
+    if err != io.EOF {
+        log.Fatal(err.Error())
     }
+    if n == 0 {
+        return
+    }
+    w.Header().Set("content-type", "application/json")
+    var req CreateAchievementRequest
+    if err = json.Unmarshal(body, &req); err != nil {
+        js, _ := json.Marshal(ResponseError{"error", err.Error()})
+        w.Write(js)
+        return
+    }
+    if len(req.Slug) == 0 {
+        js, _ := json.Marshal(ResponseError{"error", "slug cannot be empty"})
+        w.Write(js)
+        return
+    }
+    fmt.Println(req)
 }
+
+
+
+
 
 func main() {
     http.HandleFunc("/createAchievement", createAchievementHandler)
