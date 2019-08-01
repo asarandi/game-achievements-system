@@ -1,0 +1,22 @@
+--table players
+player id           |       login       |   email           |   profile img
+
+
+--table achievements
+achievement id      |       title       |   description     |   img
+
+
+--table player_bagdes
+achievement id      |       player id   |   time
+
+
+--table teams
+
+--table game sessions
+
+
+
+
+
+game id     team id     player id
+
