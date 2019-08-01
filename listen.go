@@ -2,20 +2,21 @@ package main
 
 import (
     "log"
-    "fmt"
+    _"fmt"
     "strings"
     "net/http"
-    "database/sql"
     "encoding/json"
     "github.com/gorilla/mux"
-    _"github.com/mattn/go-sqlite3"
+    "github.com/jinzhu/gorm"
+    _"github.com/jinzhu/gorm/dialects/sqlite"
 )
 
 type Achievement struct {
-    Slug            string  `json:"slug"`
-    Title           string  `json:"title"`
-    Desc            string  `json:"desc"`
-    Img             string  `json:"img"`
+    gorm.Model
+    Slug            string  `gorm:"unique" gorm:"default:'galeone'" json:"slug"`
+    Title           string  `gorm:"default:'galeone'"  json:"title"`
+    Desc            string  `gorm:"default:'galeone'" json:"desc"`
+    Img             string  `gorm:"default:'galeone'" json:"img"`
 }
 
 type Response struct {
@@ -23,33 +24,11 @@ type Response struct {
     Message         string  `json:"message"`
 }
 
-func dbInit() {
-    db, err := sql.Open("sqlite3", "file:./database.sqlite?cache=shared&mode=rwc")
-	if err != nil {
-		log.Fatal(err)
-	}
-    defer db.Close()
-
-	sqlStmt := `
-	create table if not exists achievements        (id integer primary key, slug text, title text, desc text, img text, created datetime);
-	create table if not exists members             (id integer primary key, name text, img text, created datetime);
-	create table if not exists member_achievements (id integer, achievement_id integer, created datetime);
-	create table if not exists teams               (id integer primary key, name text, img text, created datetime);
-	create table if not exists team_members        (id integer, member_id integer, created datetime);
-	create table if not exists games               (id integer primary key, created datetime);    
-	create table if not exists game_stats          (id integer, team_id integer, member_id integer, num_attacks integer, num_hits integer, amount_damage integer, num_kills integer, num_assists integer, num_spells integer, spells_damage integer, finished datetime, is_winner integer);
-	`
-	_, err = db.Exec(sqlStmt)
-	if err != nil {
-		log.Printf("%q: %s\n", err, sqlStmt)
-		return
-	}
-}
-
+var DB *gorm.DB
 
 func createAchievement(w http.ResponseWriter, r *http.Request) {
     decoder := json.NewDecoder(r.Body)
-    var a Achievement
+    a := Achievement{}
     err := decoder.Decode(&a)
     if err != nil {
         http.Error(w, err.Error(), http.StatusBadRequest)
@@ -61,11 +40,22 @@ func createAchievement(w http.ResponseWriter, r *http.Request) {
         return
     }
     w.Header().Set("content-type", "application/json")
-    fmt.Println(a)
+    if err = DB.Save(&a).Error; err != nil {
+        http.Error(w, err.Error(), http.StatusBadRequest)
+        return
+    }
+
 }
 
 func main() {
-    dbInit()
+    db, err := gorm.Open("sqlite3", "database.sqlite")
+    if err != nil {
+        panic("failed to connect database")
+    }
+    DB = db
+    defer db.Close()
+    db.AutoMigrate(&Achievement{})
+
     r := mux.NewRouter()
     r.HandleFunc("/achievements", createAchievement).Methods("POST")
 
