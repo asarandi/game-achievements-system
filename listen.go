@@ -3,7 +3,9 @@ package main
 import (
     "log"
     "fmt"
-    "strings"
+    _"reflect"
+    _"strings"
+    _"unsafe"
     "net/http"
     "encoding/json"
     "github.com/gorilla/mux"
@@ -16,6 +18,18 @@ type Achievement struct {
     Slug            string  `gorm:"unique" json:"slug"`
     Title           string  `json:"title"`
     Desc            string  `json:"desc"`
+    Img             string  `json:"img"`
+}
+
+type Member struct {
+    gorm.Model
+    Name            string  `gorm:"unique" json:"name"`
+    Img             string  `json:"img"`
+}
+
+type Team struct {
+    gorm.Model
+    Name            string  `gorm:"unique" json:"name"`
     Img             string  `json:"img"`
 }
 
@@ -34,24 +48,29 @@ func jsonResponse(w http.ResponseWriter, r Response) {
     json.NewEncoder(w).Encode(r)
 }
 
-func createAchievement(w http.ResponseWriter, r *http.Request) {
+func createRecord(w http.ResponseWriter, r *http.Request, model interface{}) {
     decoder := json.NewDecoder(r.Body)
-    a := Achievement{}
-    err := decoder.Decode(&a)
-    if err != nil {
+    if err := decoder.Decode(model); err != nil {
         jsonResponse(w, Response{false, http.StatusBadRequest, err.Error(), nil})
         return
     }
-    a.Slug = strings.TrimSpace(a.Slug)
-    if a.Slug == "" {
-        jsonResponse(w, Response{false, http.StatusBadRequest, "missing slug field in json", nil})
-        return
-    }
-    if err = DB.Save(&a).Error; err != nil {
-        jsonResponse(w, Response{false, http.StatusBadRequest, err.Error(), nil})
+    if err := DB.Create(model).Error; err != nil {
+        jsonResponse(w, Response{false, http.StatusInternalServerError, err.Error(), nil})
         return
     }
     jsonResponse(w, Response{true, http.StatusOK, "ok", nil})
+}
+
+func createAchievement(w http.ResponseWriter, r *http.Request) {
+    createRecord(w, r, &Achievement{})
+}
+
+func createMember(w http.ResponseWriter, r *http.Request) {
+    createRecord(w, r, &Member{})
+}
+
+func createTeam(w http.ResponseWriter, r *http.Request) {
+    createRecord(w, r, &Team{})
 }
 
 func dbInit() *gorm.DB {
@@ -59,7 +78,7 @@ func dbInit() *gorm.DB {
     if err != nil {
         panic("failed to connect to database")
     }
-    db.AutoMigrate(&Achievement{})
+    db.AutoMigrate(&Achievement{}, &Member{}, &Team{})
     return db
 }
 
@@ -67,6 +86,8 @@ func main() {
     DB = dbInit()
     r := mux.NewRouter()
     r.HandleFunc("/achievements", createAchievement).Methods("POST")
+    r.HandleFunc("/members", createMember).Methods("POST")
+    r.HandleFunc("/teams", createTeam).Methods("POST")
     fmt.Println("listening on :4242")
     log.Fatal(http.ListenAndServe(":4242", r))
 }
