@@ -3,9 +3,7 @@ package main
 import (
     "log"
     "fmt"
-    _"reflect"
-    _"strings"
-    _"unsafe"
+    "strings"
     "net/http"
     "encoding/json"
     "github.com/gorilla/mux"
@@ -16,7 +14,7 @@ import (
 type Achievement struct {
     gorm.Model
     Slug            string  `gorm:"unique" json:"slug"`
-    Title           string  `json:"title"`
+    Name            string  `gorm:"unique" json:"name"`
     Desc            string  `json:"desc"`
     Img             string  `json:"img"`
 }
@@ -55,10 +53,30 @@ func createRecord(w http.ResponseWriter, r *http.Request, model interface{}) {
         return
     }
     if err := DB.Create(model).Error; err != nil {
-        jsonResponse(w, Response{false, http.StatusInternalServerError, err.Error(), nil})
+        errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
+        jsonResponse(w, Response{false, errorCode, errorMessage, nil})
         return
     }
-    jsonResponse(w, Response{true, http.StatusOK, "ok", nil})
+    jsonResponse(w, Response{true, http.StatusCreated, "ok", nil})
+}
+
+func translateError(code int, msg string) (int, string) {
+    switch {
+    case strings.Contains(msg, "UNIQUE constraint failed"): msg = "record already exists"; code = http.StatusNotAcceptable
+    case msg == "record not found": code = http.StatusNotFound
+    }
+    return code, msg
+}
+
+func getRecord(w http.ResponseWriter, r *http.Request, model interface{}) {
+    vars := mux.Vars(r)
+    id := vars["id"]
+    if err := DB.First(model, id).Error; err != nil {
+        errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
+        jsonResponse(w, Response{false, errorCode, errorMessage, nil})
+        return
+    }
+    jsonResponse(w, Response{true, http.StatusOK, "ok", model})
 }
 
 func createAchievement(w http.ResponseWriter, r *http.Request) {
@@ -73,6 +91,20 @@ func createTeam(w http.ResponseWriter, r *http.Request) {
     createRecord(w, r, &Team{})
 }
 
+func getAchievement(w http.ResponseWriter, r *http.Request) {
+    getRecord(w, r, &Achievement{})
+}
+
+func getMember(w http.ResponseWriter, r *http.Request) {
+    getRecord(w, r, &Member{})
+}
+
+func getTeam(w http.ResponseWriter, r *http.Request) {
+    getRecord(w, r, &Team{})
+}
+
+
+
 func dbInit() *gorm.DB {
     db, err := gorm.Open("sqlite3", "database.sqlite")
     if err != nil {
@@ -86,8 +118,12 @@ func main() {
     DB = dbInit()
     r := mux.NewRouter()
     r.HandleFunc("/achievements", createAchievement).Methods("POST")
+    r.HandleFunc("/achievements/{id:[0-9]+}", getAchievement).Methods("GET")
     r.HandleFunc("/members", createMember).Methods("POST")
+    r.HandleFunc("/members/{id:[0-9]+}", getMember).Methods("GET")
     r.HandleFunc("/teams", createTeam).Methods("POST")
+    r.HandleFunc("/teams/{id:[0-9]+}", getTeam).Methods("GET")
+
     fmt.Println("listening on :4242")
     log.Fatal(http.ListenAndServe(":4242", r))
 }
