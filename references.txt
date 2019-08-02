@@ -1,0 +1,6 @@
+https://medium.com/studioarmix/learn-restful-api-design-ideals-c5ec915a430f
+http://www.golangprograms.com/golang-restful-api-using-grom-and-gorilla-mux.html
+http://jinzhu.me/gorm/crud.html
+https://pragmacoders.com/blog/building-a-json-api-in-go
+https://medium.com/@adigunhammedolalekan/build-and-deploy-a-secure-rest-api-with-go-postgresql-jwt-and-gorm-6fadf3da505b
+https://medium.com/@shazow/how-i-design-json-api-responses-71900f00f2db

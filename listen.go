@@ -2,7 +2,7 @@ package main
 
 import (
     "log"
-    _"fmt"
+    "fmt"
     "strings"
     "net/http"
     "encoding/json"
@@ -13,51 +13,60 @@ import (
 
 type Achievement struct {
     gorm.Model
-    Slug            string  `gorm:"unique" gorm:"default:'galeone'" json:"slug"`
-    Title           string  `gorm:"default:'galeone'"  json:"title"`
-    Desc            string  `gorm:"default:'galeone'" json:"desc"`
-    Img             string  `gorm:"default:'galeone'" json:"img"`
+    Slug            string  `gorm:"unique" json:"slug"`
+    Title           string  `json:"title"`
+    Desc            string  `json:"desc"`
+    Img             string  `json:"img"`
 }
 
 type Response struct {
-    Success         string  `json:"success"`
-    Message         string  `json:"message"`
+    Success         bool        `json:"success"`
+    Code            int         `json:"code"`
+    Message         string      `json:"message"`
+    Result          interface{} `json:"result"`
 }
 
 var DB *gorm.DB
+
+func jsonResponse(w http.ResponseWriter, r Response) {
+    w.Header().Set("content-type", "application/json")
+    w.WriteHeader(r.Code)
+    json.NewEncoder(w).Encode(r)
+}
 
 func createAchievement(w http.ResponseWriter, r *http.Request) {
     decoder := json.NewDecoder(r.Body)
     a := Achievement{}
     err := decoder.Decode(&a)
     if err != nil {
-        http.Error(w, err.Error(), http.StatusBadRequest)
+        jsonResponse(w, Response{false, http.StatusBadRequest, err.Error(), nil})
         return
     }
     a.Slug = strings.TrimSpace(a.Slug)
     if a.Slug == "" {
-        http.Error(w, "missing \"slug\" field in JSON", http.StatusBadRequest)
+        jsonResponse(w, Response{false, http.StatusBadRequest, "missing slug field in json", nil})
         return
     }
-    w.Header().Set("content-type", "application/json")
     if err = DB.Save(&a).Error; err != nil {
-        http.Error(w, err.Error(), http.StatusBadRequest)
+        jsonResponse(w, Response{false, http.StatusBadRequest, err.Error(), nil})
         return
     }
+    jsonResponse(w, Response{true, http.StatusOK, "ok", nil})
+}
 
+func dbInit() *gorm.DB {
+    db, err := gorm.Open("sqlite3", "database.sqlite")
+    if err != nil {
+        panic("failed to connect to database")
+    }
+    db.AutoMigrate(&Achievement{})
+    return db
 }
 
 func main() {
-    db, err := gorm.Open("sqlite3", "database.sqlite")
-    if err != nil {
-        panic("failed to connect database")
-    }
-    DB = db
-    defer db.Close()
-    db.AutoMigrate(&Achievement{})
-
+    DB = dbInit()
     r := mux.NewRouter()
     r.HandleFunc("/achievements", createAchievement).Methods("POST")
-
+    fmt.Println("listening on :4242")
     log.Fatal(http.ListenAndServe(":4242", r))
 }
