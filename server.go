@@ -13,29 +13,31 @@ import (
 
 type Achievement struct {
     gorm.Model
-    Slug            string      `gorm:"unique" json:"slug"`
-    Name            string      `gorm:"unique" json:"name"`
-    Desc            string      `json:"desc"`
-    Img             string      `json:"img"`
+    Slug            string          `gorm:"unique" json:"slug"`
+    Name            string          `gorm:"unique" json:"name"`
+    Desc            string          `json:"desc"`
+    Img             string          `json:"img"`
+    Members         []Member        `gorm:"many2many:member_achievements;" json:"members,omitempty"`
 }
 
 type Member struct {
     gorm.Model
-    Name            string      `gorm:"unique" json:"name"`
-    Img             string      `json:"img"`
+    Name            string          `gorm:"unique" json:"name"`
+    Img             string          `json:"img"`
+    Achievements    []Achievement   `gorm:"many2many:member_achievements;" json:"achievements,omitempty"`
 }
 
 type Team struct {
     gorm.Model
-    Name            string      `gorm:"unique" json:"name"`
-    Img             string      `json:"img"`
+    Name            string          `gorm:"unique" json:"name"`
+    Img             string          `json:"img"`
 }
 
 type Response struct {
-    Success         bool        `json:"success"`
-    Code            int         `json:"code"`
-    Message         string      `json:"message"`
-    Result          interface{} `json:"result"`
+    Success         bool            `json:"success"`
+    Code            int             `json:"code"`
+    Message         string          `json:"message"`
+    Result          interface{}     `json:"result"`
 }
 
 var DB *gorm.DB
@@ -70,8 +72,7 @@ func createRecord(w http.ResponseWriter, r *http.Request, model interface{}) {
 
 func getRecord(w http.ResponseWriter, r *http.Request, model interface{}) {
     vars := mux.Vars(r)
-    id := vars["id"]
-    if err := DB.First(model, id).Error; err != nil {
+    if err := DB.First(model, vars["id"]).Error; err != nil {
         errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
         jsonResponse(w, Response{false, errorCode, errorMessage, nil})
         return
@@ -92,8 +93,7 @@ func getAllRecords(w http.ResponseWriter, r *http.Request, model interface{}) {
 // load updated data from request body into same struct and save 
 func updateRecord(w http.ResponseWriter, r *http.Request, model interface{}) {
     vars := mux.Vars(r)
-    id := vars["id"]
-    if err := DB.First(model, id).Error; err != nil {
+    if err := DB.First(model, vars["id"]).Error; err != nil {
         errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
         jsonResponse(w, Response{false, errorCode, errorMessage, nil})
         return
@@ -113,8 +113,7 @@ func updateRecord(w http.ResponseWriter, r *http.Request, model interface{}) {
 
 func deleteRecord(w http.ResponseWriter, r *http.Request, model interface{}) {
     vars := mux.Vars(r)
-    id := vars["id"]
-    if err := DB.First(model, id).Error; err != nil {
+    if err := DB.First(model, vars["id"]).Error; err != nil {
         errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
         jsonResponse(w, Response{false, errorCode, errorMessage, nil})
         return
@@ -136,6 +135,18 @@ func dbInit() *gorm.DB {
     return db
 }
 
+func memberAchievements(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    member := Member{}
+    if err := DB.First(&member, vars["id"]).Error; err != nil {
+        errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
+        jsonResponse(w, Response{false, errorCode, errorMessage, nil})
+        return
+    }
+    DB.Model(&member).Association("Achievements").Find(&member.Achievements)
+    jsonResponse(w, Response{true, http.StatusOK, "ok", member.Achievements})
+}
+
 func main() {
     DB = dbInit()
     r := mux.NewRouter()
@@ -151,6 +162,8 @@ func main() {
     r.HandleFunc("/members", getAllMembers).Methods("GET")
     r.HandleFunc("/members/{id:[0-9]+}", updateMember).Methods("PUT")
     r.HandleFunc("/members/{id:[0-9]+}", deleteMember).Methods("DELETE")
+
+    r.HandleFunc("/memberAchievements/{id:[0-9]+}", memberAchievements).Methods("GET")
 
     r.HandleFunc("/teams", createTeam).Methods("POST")
     r.HandleFunc("/teams/{id:[0-9]+}", getTeam).Methods("GET")
