@@ -88,7 +88,7 @@ func getAllRecords(w http.ResponseWriter, r *http.Request, model interface{}) {
     jsonResponse(w, Response{true, http.StatusOK, "ok", model})
 }
 
-// first find existing record to populate struct with all extra data: id, createdat, updateda, etc
+// first find existing record to populate struct with all extra data: ID, CreatedAt, UpdatedAt, etc
 // load updated data from request body into same struct and save 
 func updateRecord(w http.ResponseWriter, r *http.Request, model interface{}) {
     vars := mux.Vars(r)
@@ -108,7 +108,7 @@ func updateRecord(w http.ResponseWriter, r *http.Request, model interface{}) {
         jsonResponse(w, Response{false, errorCode, errorMessage, nil})
         return
     }
-    jsonResponse(w, Response{true, http.StatusCreated, "ok", nil})
+    jsonResponse(w, Response{true, http.StatusAccepted, "ok", nil})
 }
 
 func deleteRecord(w http.ResponseWriter, r *http.Request, model interface{}) {
@@ -124,7 +124,7 @@ func deleteRecord(w http.ResponseWriter, r *http.Request, model interface{}) {
         jsonResponse(w, Response{false, errorCode, errorMessage, nil})
         return
     }
-    jsonResponse(w, Response{true, http.StatusCreated, "ok", nil})
+    jsonResponse(w, Response{true, http.StatusNoContent, "ok", nil})
 }
 
 func dbInit() *gorm.DB {
