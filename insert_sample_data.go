@@ -3,9 +3,12 @@ package main
 import (
     "bufio"
     "encoding/csv"
-    _"encoding/json"
+    "encoding/json"
+    "net/http"
+    "bytes"
     "fmt"
-    "io"
+    _"io"
+    "io/ioutil"
     "log"
     "os"
 )
@@ -30,22 +33,42 @@ type Team struct {
     Img             string      `json:"img"`
 }
 
-func main() {
-    csvFile, _ := os.Open("data/achievements.csv")
-    reader := csv.NewReader(bufio.NewReader(csvFile))
-    for {
-        line, err := reader.Read()
-        if err == io.EOF {
-            break
-        } else if err != nil {
+
+type sampleData struct {
+    filename        string
+    endpoint        string
+    f               func (s []string) interface{}
+}
+
+func insertSampleData(server string, array []sampleData) {
+    for _, data := range array {
+        fd, err := os.Open(data.filename);
+        if err != nil {
             log.Fatal(err)
         }
-        a := Achievement{
-            Slug: line[0],
-            Name: line[1],
-            Desc: line[2],
-            Img:  line[3],
+        strs, _ := csv.NewReader(bufio.NewReader(fd)).ReadAll()
+        defer fd.Close()
+        for _, s := range strs {
+            a := data.f(s)
+            j, _ := json.Marshal(a)
+            resp, err := http.Post(server + data.endpoint, "application/json", bytes.NewBuffer(j))
+            if (err != nil) {
+                log.Fatal(err)
+            }
+            body, _ := ioutil.ReadAll(resp.Body)
+            fmt.Println(resp.Status, string(body))
+            if resp.StatusCode != 201 {
+                fmt.Println(a)
+            }
         }
-        fmt.Println(a)
     }
+}
+
+func main() {
+    data := []sampleData{
+        {"data/achievements.csv", "/achievements", func (s []string)interface{}{return Achievement{s[0],s[1],s[2],s[3]}}},
+        {"data/members.csv", "/members", func (s []string)interface{}{return Member{s[0],s[1]}}},
+        {"data/teams.csv", "/teams", func (s []string)interface{}{return Team{s[0],s[1]}}},
+    }
+    insertSampleData("http://0.0.0.0:4242", data)
 }
