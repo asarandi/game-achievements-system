@@ -25,14 +25,14 @@ type Member struct {
     Name            string          `gorm:"unique" json:"name"`
     Img             string          `json:"img"`
     Achievements    []Achievement   `gorm:"many2many:member_achievements;" json:"achievements,omitempty"`
-    Teams           []Team          `gorm:"many2many:member_teams;" json:"teams,omitempty"`
+    Teams           []Team          `gorm:"many2many:team_members;" json:"teams,omitempty"`
 }
 
 type Team struct {
     gorm.Model
     Name            string          `gorm:"unique" json:"name"`
     Img             string          `json:"img"`
-    Members         []Member        `gorm:"many2many:member_teams;" json:"members,omitempty"`
+    Members         []Member        `gorm:"many2many:team_members;" json:"members,omitempty"`
 }
 
 type Response struct {
@@ -137,49 +137,85 @@ func dbInit() *gorm.DB {
     return db
 }
 
-// generic many2many getter
-func getAssociationRecords(w http.ResponseWriter, r *http.Request, a interface{}, b string, ab interface{}) {
+func getAssociationRecords(w http.ResponseWriter, r *http.Request, a interface{}, b string, c interface{}) {
     vars := mux.Vars(r)
     if err := DB.First(a, vars["id"]).Error; err != nil {
         errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
         jsonResponse(w, Response{false, errorCode, errorMessage, nil})
         return
     }
-    DB.Model(a).Association(b).Find(ab)
-    jsonResponse(w, Response{true, http.StatusOK, "ok", ab})
+    DB.Model(a).Association(b).Find(c)
+    jsonResponse(w, Response{true, http.StatusOK, "ok", c})
 }
 
 
-func memberAchievements(w http.ResponseWriter, r *http.Request) {
+func addAssociationRecord(w http.ResponseWriter, r *http.Request, a interface{}, b string, c interface{}) {
+    vars := mux.Vars(r)
+    if err := DB.First(a, vars["id0"]).Error; err != nil {
+        errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
+        jsonResponse(w, Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id0"], errorMessage), nil})
+        return
+    }
+    if err := DB.First(c, vars["id1"]).Error; err != nil {
+        errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
+        jsonResponse(w, Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id1"], errorMessage), nil})
+        return
+    }
+    DB.Model(a).Association(b).Append(c)
+    jsonResponse(w, Response{true, http.StatusOK, "ok", nil})
+}
+
+func removeAssociationRecord(w http.ResponseWriter, r *http.Request, a interface{}, b string, c interface{}) {
+    vars := mux.Vars(r)
+    if err := DB.First(a, vars["id0"]).Error; err != nil {
+        errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
+        jsonResponse(w, Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id0"], errorMessage), nil})
+        return
+    }
+    if err := DB.First(c, vars["id1"]).Error; err != nil {
+        errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
+        jsonResponse(w, Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id1"], errorMessage), nil})
+        return
+    }
+    DB.Model(a).Association(b).Delete(c)
+    jsonResponse(w, Response{true, http.StatusOK, "ok", nil})
+}
+
+func getMemberAchievements(w http.ResponseWriter, r *http.Request) {
     model := Member{}
     getAssociationRecords(w, r, &model, "Achievements", &model.Achievements)
-
-//    vars := mux.Vars(r)
-//    member := Member{}
-//    if err := DB.First(&member, vars["id"]).Error; err != nil {
-//        errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-//        jsonResponse(w, Response{false, errorCode, errorMessage, nil})
-//        return
-//    }
-//    DB.Model(&member).Association("Achievements").Find(&member.Achievements)
-//    jsonResponse(w, Response{true, http.StatusOK, "ok", member.Achievements})
 }
 
-func achievementMembers(w http.ResponseWriter, r *http.Request) {
+func getAchievementMembers(w http.ResponseWriter, r *http.Request) {
     model := Achievement{}
     getAssociationRecords(w, r, &model, "Members", &model.Members)
-//    vars := mux.Vars(r)
-//    achievement := Achievement{}
-//    if err := DB.First(&achievement, vars["id"]).Error; err != nil {
-//        errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-//        jsonResponse(w, Response{false, errorCode, errorMessage, nil})
-//        return
-//    }
-//    DB.Model(&achievement).Association("Members").Find(&achievement.Members)
-//    jsonResponse(w, Response{true, http.StatusOK, "ok", achievement.Members})
 }
 
+func getMemberTeams(w http.ResponseWriter, r *http.Request) {
+    model := Member{}
+    getAssociationRecords(w, r, &model, "Teams", &model.Teams)
+}
 
+func getTeamMembers(w http.ResponseWriter, r *http.Request) {
+    model := Team{}
+    getAssociationRecords(w, r, &model, "Members", &model.Members)
+}
+
+func addTeamMember(w http.ResponseWriter, r *http.Request) {
+    addAssociationRecord(w, r, &Team{}, "Members", &Member{})
+}
+
+func removeTeamMember(w http.ResponseWriter, r *http.Request) {
+    removeAssociationRecord(w, r, &Team{}, "Members", &Member{})
+}
+
+func addMemberTeam(w http.ResponseWriter, r *http.Request) {
+    addAssociationRecord(w, r, &Member{}, "Teams", &Team{})
+}
+
+func removeMemberTeam(w http.ResponseWriter, r *http.Request) {
+    removeAssociationRecord(w, r, &Member{}, "Teams", &Team{})
+}
 
 
 func main() {
@@ -198,16 +234,16 @@ func main() {
     r.HandleFunc("/members/{id:[0-9]+}", updateMember).Methods("PUT")
     r.HandleFunc("/members/{id:[0-9]+}", deleteMember).Methods("DELETE")
 
-    r.HandleFunc("/memberAchievements/{id:[0-9]+}", memberAchievements).Methods("GET")
-    r.HandleFunc("/achievementMembers/{id:[0-9]+}", achievementMembers).Methods("GET")
+    r.HandleFunc("/memberAchievements/{id:[0-9]+}", getMemberAchievements).Methods("GET")
+    r.HandleFunc("/achievementMembers/{id:[0-9]+}", getAchievementMembers).Methods("GET")
 
-//    r.HandleFunc("/teamMembers/{team_id:[0-9]+}", getTeamMembers).Methods("GET")                          // list all members for a given team
-//    r.HandleFunc("/teamMembers/{team_id:[0-9]+}/{member_id:[0-9]+}", updateTeamMembers).Methods("PUT")    // a team adds a member
-//    r.HandleFunc("/teamMembers/{team_id:[0-9]+}/{member_id:[0-9]+}", deleteTeamMembers).Methods("DELETE") // a team removes a member
+    r.HandleFunc("/teamMembers/{id:[0-9]+}", getTeamMembers).Methods("GET")                         // list all members for a given team
+    r.HandleFunc("/teamMembers/{id0:[0-9]+}/{id1:[0-9]+}", addTeamMember).Methods("POST")           // a team (id0) adds a member (id1)
+    r.HandleFunc("/teamMembers/{id0:[0-9]+}/{id1:[0-9]+}", removeTeamMember).Methods("DELETE")      // a team (id0) removes a member (id1)
 
-//    r.HandleFunc("/memberTeams/{member_id:[0-9]+}", getMemberTeams).Methods("GET")                        // list all teams for a given member
-//    r.HandleFunc("/memberTeams/{member_id:[0-9]+}/{team_id:[0-9]+}", updateMemberTeams).Methods("PUT")    // member joins a team
-//    r.HandleFunc("/memberTeams/{member_id:[0-9]+}/{team_id:[0-9]+}", deleteMemberTeams).Methods("DELETE") // member leaves a team
+    r.HandleFunc("/memberTeams/{id:[0-9]+}", getMemberTeams).Methods("GET")                         // list all teams for a given member
+    r.HandleFunc("/memberTeams/{id0:[0-9]+}/{id1:[0-9]+}", addMemberTeam).Methods("POST")           // a member (id0) joins a team (id1)
+    r.HandleFunc("/memberTeams/{id0:[0-9]+}/{id1:[0-9]+}", removeMemberTeam).Methods("DELETE")      // a member (id0) leaves a team (id1)
 
     r.HandleFunc("/teams", createTeam).Methods("POST")
     r.HandleFunc("/teams/{id:[0-9]+}", getTeam).Methods("GET")
