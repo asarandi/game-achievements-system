@@ -359,58 +359,66 @@ func haveSharedMembers(a []Member, b []Member) bool {
     return false
 }
 
-/// work in progress
-
 func addGameTeam(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
     game := Game{}
-    if err := DB.First(&game, vars["id0"]).Error; err != nil {
+    team, prevTeam := Team{}, Team{}
+
+    if err := DB.First(&game, vars["id0"]).Error; err != nil {          // game not found
         errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
         jsonResponse(w, Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id0"], errorMessage), nil})
-        return
-    }
-    team := Team{}
-    if err := DB.First(&team, vars["id1"]).Error; err != nil {
-        errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-        jsonResponse(w, Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id1"], errorMessage), nil})
         return
     }
     if (game.Status != NewGame) {
         jsonResponse(w, Response{false, http.StatusForbidden, fmt.Sprintf("game status must be %d", NewGame), nil})
         return
     }
-    members := []Member{}
-    DB.Model(&team).Association("Members").Find(&members)
-    if len(members) < MinNumMembers || len(members) > MaxNumMembers {
+
+    if  DB.Model(&game).Association("Teams").Count() != 0 {             // load 1st team
+        DB.Model(&game).Association("Teams").Find(&prevTeam)
+        DB.Model(&prevTeam).Association("Members").Find(&prevTeam.Members)
+    }
+
+    // it is possible that 1st team added or removed members while waiting for 2nd team
+    // if so, remove 1st team from game
+    if len(prevTeam.Members) < MinNumMembers || len(prevTeam.Members) > MaxNumMembers {
+        DB.Model(&game).Association("Teams").Delete(&prevTeam)
+    }
+
+    if err := DB.First(&team, vars["id1"]).Error; err != nil {
+        errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
+        jsonResponse(w, Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id1"], errorMessage), nil})
+        return
+    }
+
+    DB.Model(&team).Association("Members").Find(&team.Members)
+    if len(team.Members) < MinNumMembers || len(team.Members) > MaxNumMembers {
         s := fmt.Sprintf("team must contain between %d and %d members", MinNumMembers, MaxNumMembers)
         jsonResponse(w, Response{false, http.StatusForbidden, s, nil})
         return
     }
 
-    if  DB.Model(&game).Association("Teams").Count() == 0 {  // this team is first team
+    if  DB.Model(&game).Association("Teams").Count() == 0 {             // this team is first team
         DB.Model(&game).Association("Teams").Append(&team)
-        DB.Model(&game).Association("Members").Append(&members)
         jsonResponse(w, Response{true, http.StatusOK, "first team ok", nil})
         return
     }
-    prevTeam := Team{}
-    prevMembers := []Member{}
-    DB.Model(&game).Association("Teams").Find(&prevTeam)
-    DB.Model(&game).Association("Members").Find(&prevMembers)
+
     if prevTeam.ID == team.ID {
         jsonResponse(w, Response{false, http.StatusForbidden, "teams cannot be the same", nil})
         return
     }
-    if len(prevMembers) != len(members) {
+    if len(prevTeam.Members) != len(team.Members) {
         jsonResponse(w, Response{false, http.StatusForbidden, "teams must have same number of players", nil})
         return
     }
-    if haveSharedMembers(prevMembers, members) {
+    if haveSharedMembers(prevTeam.Members, team.Members) {
         jsonResponse(w, Response{false, http.StatusForbidden, "teams cannot have shared members", nil})
         return
     }
-    DB.Model(&game).Association("Teams").Append(&team)
-    DB.Model(&game).Association("Members").Append(&members)
+    DB.Model(&game).Association("Teams").Append(&team)                  // add 2nd team to game
+    DB.Model(&game).Association("Members").Append(&prevTeam.Members)    // add players from both teams to game
+    DB.Model(&game).Association("Members").Append(&team.Members)        //
     game.Status = StartedGame
     DB.Save(&game)
     fmt.Printf("game: +%v\n", game)
