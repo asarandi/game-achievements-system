@@ -25,12 +25,14 @@ type Member struct {
     Name            string          `gorm:"unique" json:"name"`
     Img             string          `json:"img"`
     Achievements    []Achievement   `gorm:"many2many:member_achievements;" json:"achievements,omitempty"`
+    Teams           []Team          `gorm:"many2many:member_teams;" json:"teams,omitempty"`
 }
 
 type Team struct {
     gorm.Model
     Name            string          `gorm:"unique" json:"name"`
     Img             string          `json:"img"`
+    Members         []Member        `gorm:"many2many:member_teams;" json:"members,omitempty"`
 }
 
 type Response struct {
@@ -135,17 +137,50 @@ func dbInit() *gorm.DB {
     return db
 }
 
-func memberAchievements(w http.ResponseWriter, r *http.Request) {
+// generic many2many getter
+func getAssociationRecords(w http.ResponseWriter, r *http.Request, a interface{}, b string, ab interface{}) {
     vars := mux.Vars(r)
-    member := Member{}
-    if err := DB.First(&member, vars["id"]).Error; err != nil {
+    if err := DB.First(a, vars["id"]).Error; err != nil {
         errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
         jsonResponse(w, Response{false, errorCode, errorMessage, nil})
         return
     }
-    DB.Model(&member).Association("Achievements").Find(&member.Achievements)
-    jsonResponse(w, Response{true, http.StatusOK, "ok", member.Achievements})
+    DB.Model(a).Association(b).Find(ab)
+    jsonResponse(w, Response{true, http.StatusOK, "ok", ab})
 }
+
+
+func memberAchievements(w http.ResponseWriter, r *http.Request) {
+    model := Member{}
+    getAssociationRecords(w, r, &model, "Achievements", &model.Achievements)
+
+//    vars := mux.Vars(r)
+//    member := Member{}
+//    if err := DB.First(&member, vars["id"]).Error; err != nil {
+//        errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
+//        jsonResponse(w, Response{false, errorCode, errorMessage, nil})
+//        return
+//    }
+//    DB.Model(&member).Association("Achievements").Find(&member.Achievements)
+//    jsonResponse(w, Response{true, http.StatusOK, "ok", member.Achievements})
+}
+
+func achievementMembers(w http.ResponseWriter, r *http.Request) {
+    model := Achievement{}
+    getAssociationRecords(w, r, &model, "Members", &model.Members)
+//    vars := mux.Vars(r)
+//    achievement := Achievement{}
+//    if err := DB.First(&achievement, vars["id"]).Error; err != nil {
+//        errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
+//        jsonResponse(w, Response{false, errorCode, errorMessage, nil})
+//        return
+//    }
+//    DB.Model(&achievement).Association("Members").Find(&achievement.Members)
+//    jsonResponse(w, Response{true, http.StatusOK, "ok", achievement.Members})
+}
+
+
+
 
 func main() {
     DB = dbInit()
@@ -164,6 +199,15 @@ func main() {
     r.HandleFunc("/members/{id:[0-9]+}", deleteMember).Methods("DELETE")
 
     r.HandleFunc("/memberAchievements/{id:[0-9]+}", memberAchievements).Methods("GET")
+    r.HandleFunc("/achievementMembers/{id:[0-9]+}", achievementMembers).Methods("GET")
+
+//    r.HandleFunc("/teamMembers/{team_id:[0-9]+}", getTeamMembers).Methods("GET")                          // list all members for a given team
+//    r.HandleFunc("/teamMembers/{team_id:[0-9]+}/{member_id:[0-9]+}", updateTeamMembers).Methods("PUT")    // a team adds a member
+//    r.HandleFunc("/teamMembers/{team_id:[0-9]+}/{member_id:[0-9]+}", deleteTeamMembers).Methods("DELETE") // a team removes a member
+
+//    r.HandleFunc("/memberTeams/{member_id:[0-9]+}", getMemberTeams).Methods("GET")                        // list all teams for a given member
+//    r.HandleFunc("/memberTeams/{member_id:[0-9]+}/{team_id:[0-9]+}", updateMemberTeams).Methods("PUT")    // member joins a team
+//    r.HandleFunc("/memberTeams/{member_id:[0-9]+}/{team_id:[0-9]+}", deleteMemberTeams).Methods("DELETE") // member leaves a team
 
     r.HandleFunc("/teams", createTeam).Methods("POST")
     r.HandleFunc("/teams/{id:[0-9]+}", getTeam).Methods("GET")
