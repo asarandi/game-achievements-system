@@ -3,7 +3,7 @@ package main
 import (
     "log"
     "fmt"
-    "time"
+   _"time"
     "strings"
     "net/http"
     "encoding/json"
@@ -53,28 +53,23 @@ type Game struct {
     Teams           []Team          `gorm:"many2many:game_teams;" json:"teams,omitempty"`
     Members         []Member        `gorm:"many2many:game_members;" json:"members,omitempty"`
     Stats           []Stat          `json:"stats,omitempty"`
-    TeamID          int             `json:"team_id,omitempty"`
+    TeamID          uint            `json:"team_id,omitempty"`
     Winner          Team            `json:"winner,omitempty"`
 }
 
 type Stat struct {
     gorm.Model
-    GameID          int             `json:"game_id,omitempty"`
-    Game            Game            `json:"game,omitempty"`
-    TeamID          int             `json:"team_id,omitempty"`
-    Team            Team            `json:"team,omitempty"`
-    MemberID        int             `json:"member_id,omitempty"`
-    Member          Member          `json:"member,omitempty"`
-    Started         time.Time       `json:"started,omitempty"`
-    Finished        time.Time       `json:"finished,omitempty"`
-    NumAttacks      int             `json:"num_attacks,omitempty"`
-    NumHits         int             `json:"num_hits,omitempty"`
-    AmountDamage    int             `json:"amount_damage,omitempty"`
-    NumKills        int             `json:"num_kills,omitempty"`
-    InstantKills    int             `json:"instant_kills,omitempty"`
-    NumAssists      int             `json:"num_assists,omitempty"`
-    NumSpells       int             `json:"num_spells,omitempty"`
-    SpellsDamage    int             `json:"spells_damage,omitempty"`
+    GameID          uint             `json:"game_id,omitempty"`
+    TeamID          uint             `json:"team_id,omitempty"`
+    MemberID        uint             `json:"member_id,omitempty"`
+    NumAttacks      uint             `json:"num_attacks,omitempty"`
+    NumHits         uint             `json:"num_hits,omitempty"`
+    AmountDamage    uint             `json:"amount_damage,omitempty"`
+    NumKills        uint             `json:"num_kills,omitempty"`
+    InstantKills    uint             `json:"instant_kills,omitempty"`
+    NumAssists      uint             `json:"num_assists,omitempty"`
+    NumSpells       uint             `json:"num_spells,omitempty"`
+    SpellsDamage    uint             `json:"spells_damage,omitempty"`
 }
 
 
@@ -359,6 +354,16 @@ func haveSharedMembers(a []Member, b []Member) bool {
     return false
 }
 
+func createStats(g *Game, t *Team, m *[]Member) {
+    for _, i := range *m {
+        r := Stat{}
+        r.GameID = g.ID
+        r.TeamID = t.ID
+        r.MemberID = i.ID
+        DB.Create(&r)
+    }
+}
+
 func addGameTeam(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
     game := Game{}
@@ -420,6 +425,8 @@ func addGameTeam(w http.ResponseWriter, r *http.Request) {
     DB.Model(&game).Association("Members").Append(&prevTeam.Members)    // add players from both teams to game
     DB.Model(&game).Association("Members").Append(&team.Members)        //
     game.Status = StartedGame
+    createStats(&game, &team, &team.Members)
+    createStats(&game, &prevTeam, &prevTeam.Members)
     DB.Save(&game)
     fmt.Printf("game: +%v\n", game)
     jsonResponse(w, Response{true, http.StatusOK, "second team ok", nil})
