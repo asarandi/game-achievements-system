@@ -3,6 +3,7 @@ package main
 import (
     "log"
     "fmt"
+    "time"
     "strings"
     "net/http"
     "encoding/json"
@@ -26,6 +27,8 @@ type Member struct {
     Img             string          `json:"img"`
     Achievements    []Achievement   `gorm:"many2many:member_achievements;" json:"achievements,omitempty"`
     Teams           []Team          `gorm:"many2many:team_members;" json:"teams,omitempty"`
+    Games           []Game          `gorm:"many2many game_members;" json:"games,omitempty"`
+    Stats           []Stat          `json:"stats,omitempty"`
 }
 
 type Team struct {
@@ -33,7 +36,47 @@ type Team struct {
     Name            string          `gorm:"unique" json:"name"`
     Img             string          `json:"img"`
     Members         []Member        `gorm:"many2many:team_members;" json:"members,omitempty"`
+    Games           []Game          `gorm:"many2many game_teams;" json:"games,omitempty"`
+    Stats           []Stat          `json:"stats,omitempty"`
 }
+
+type GameStatus     int
+const (
+        NewGame         GameStatus = iota
+        StartedGame
+        FinishedGame
+    )
+
+type Game struct {
+    gorm.Model
+    Status          GameStatus      `json:"status"`
+    Teams           []Team          `gorm:"many2many:game_teams;" json:"teams,omitempty"`
+    Members         []Member        `gorm:"many2many:game_members;" json:"members,omitempty"`
+    Stats           []Stat          `json:"stats,omitempty"`
+    TeamID          int             `json:"team_id,omitempty"`
+    Winner          Team            `json:"winner,omitempty"`
+}
+
+type Stat struct {
+    gorm.Model
+    GameID          int             `json:"game_id,omitempty"`
+    Game            Game            `json:"game,omitempty"`
+    TeamID          int             `json:"team_id,omitempty"`
+    Team            Team            `json:"team,omitempty"`
+    MemberID        int             `json:"member_id,omitempty"`
+    Member          Member          `json:"member,omitempty"`
+    Started         time.Time       `json:"started,omitempty"`
+    Finished        time.Time       `json:"finished,omitempty"`
+    NumAttacks      int             `json:"num_attacks,omitempty"`
+    NumHits         int             `json:"num_hits,omitempty"`
+    AmountDamage    int             `json:"amount_damage,omitempty"`
+    NumKills        int             `json:"num_kills,omitempty"`
+    InstantKills    int             `json:"instant_kills,omitempty"`
+    NumAssists      int             `json:"num_assists,omitempty"`
+    NumSpells       int             `json:"num_spells,omitempty"`
+    SpellsDamage    int             `json:"spells_damage,omitempty"`
+}
+
 
 type Response struct {
     Success         bool            `json:"success"`
@@ -58,7 +101,16 @@ func translateError(code int, msg string) (int, string) {
     return code, msg
 }
 
-func createRecord(w http.ResponseWriter, r *http.Request, model interface{}) {
+func createEmpty(w http.ResponseWriter, r *http.Request, model interface{}) {
+    if err := DB.Create(model).Error; err != nil {
+        errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
+        jsonResponse(w, Response{false, errorCode, errorMessage, nil})
+        return
+    }
+    jsonResponse(w, Response{true, http.StatusCreated, "ok", model})
+}
+
+func createFromData(w http.ResponseWriter, r *http.Request, model interface{}) {
     decoder := json.NewDecoder(r.Body)
     if err := decoder.Decode(model); err != nil {
         jsonResponse(w, Response{false, http.StatusBadRequest, err.Error(), nil})
@@ -69,10 +121,10 @@ func createRecord(w http.ResponseWriter, r *http.Request, model interface{}) {
         jsonResponse(w, Response{false, errorCode, errorMessage, nil})
         return
     }
-    jsonResponse(w, Response{true, http.StatusCreated, "ok", nil})
+    jsonResponse(w, Response{true, http.StatusCreated, "ok", model})
 }
 
-func getRecord(w http.ResponseWriter, r *http.Request, model interface{}) {
+func getRecordByID(w http.ResponseWriter, r *http.Request, model interface{}) {
     vars := mux.Vars(r)
     if err := DB.First(model, vars["id"]).Error; err != nil {
         errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
@@ -84,6 +136,15 @@ func getRecord(w http.ResponseWriter, r *http.Request, model interface{}) {
 
 func getAllRecords(w http.ResponseWriter, r *http.Request, model interface{}) {
     if err := DB.Find(model).Error; err != nil {
+        errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
+        jsonResponse(w, Response{false, errorCode, errorMessage, nil})
+        return
+    }
+    jsonResponse(w, Response{true, http.StatusOK, "ok", model})
+}
+
+func getRecordsWhere(w http.ResponseWriter, r *http.Request, model interface{}, where ...interface{}) {
+    if err := DB.Find(model, where).Error; err != nil {
         errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
         jsonResponse(w, Response{false, errorCode, errorMessage, nil})
         return
@@ -110,7 +171,7 @@ func updateRecord(w http.ResponseWriter, r *http.Request, model interface{}) {
         jsonResponse(w, Response{false, errorCode, errorMessage, nil})
         return
     }
-    jsonResponse(w, Response{true, http.StatusAccepted, "ok", nil})
+    jsonResponse(w, Response{true, http.StatusAccepted, "ok", model})
 }
 
 func deleteRecord(w http.ResponseWriter, r *http.Request, model interface{}) {
@@ -133,7 +194,7 @@ func dbInit() *gorm.DB {
     if err != nil {
         panic("failed to connect to database")
     }
-    db.AutoMigrate(&Achievement{}, &Member{}, &Team{})
+    db.AutoMigrate(&Achievement{}, &Member{}, &Team{}, &Game{}, &Stat{})
     return db
 }
 
@@ -245,6 +306,23 @@ func main() {
     r.HandleFunc("/memberTeams/{id0:[0-9]+}/{id1:[0-9]+}", addMemberTeam).Methods("POST")           // a member (id0) joins a team (id1)
     r.HandleFunc("/memberTeams/{id0:[0-9]+}/{id1:[0-9]+}", removeMemberTeam).Methods("DELETE")      // a member (id0) leaves a team (id1)
 
+
+    r.HandleFunc("/games", createGame).Methods("POST")
+    r.HandleFunc("/games/all", getAllGames).Methods("GET")
+    r.HandleFunc("/games/new", getNewGames).Methods("GET")
+    r.HandleFunc("/games/started", getStartedGames).Methods("GET")
+    r.HandleFunc("/games/finished", getFinishedGames).Methods("GET")
+
+
+    // a team (id1) joins a game session (id0)
+    r.HandleFunc("/gameTeams/{id0:[0-9]+}/{id1:[0-9]+}", addGameTeam).Methods("POST")
+
+//
+//    r.HandleFunc("/gameStats/{id:[0-9]+}", getGameStats).Methods("GET")                             // list all stats for a given game
+//    r.HandleFunc("/teamStats/{id:[0-9]+}", getTeamStats).Methods("GET")                             // list all stats for a given team
+//    r.HandleFunc("/memberStats/{id:[0-9]+}", getMemberStats).Methods("GET")                         // list all stats for a given member
+
+
     r.HandleFunc("/teams", createTeam).Methods("POST")
     r.HandleFunc("/teams/{id:[0-9]+}", getTeam).Methods("GET")
     r.HandleFunc("/teams", getAllTeams).Methods("GET")
@@ -256,27 +334,130 @@ func main() {
 }
 
 
+//
+// logic: 
+//    - a game can only have two teams
+//    - once a new game is created it has 0 teams and its status is `NewGame`
+//    - first team to join must have between 3 and 5 members, otherwise error
+//    - second team to join must have same number of members as first team, otherwise error
+//    - the two teams cannot be the same
+//    - the two teams cannot have shared members
+//    - once second team joins game status is changed to `StartedGame`
+//
+
+const MinNumMembers = 3
+const MaxNumMembers = 5
+
+func haveSharedMembers(a []Member, b []Member) bool {
+    for _, i := range a {
+        for _, j := range b {
+            if i.ID == j.ID {
+                return true
+            }
+        }
+    }
+    return false
+}
+
+/// work in progress
+
+func addGameTeam(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    game := Game{}
+    if err := DB.First(&game, vars["id0"]).Error; err != nil {
+        errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
+        jsonResponse(w, Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id0"], errorMessage), nil})
+        return
+    }
+    team := Team{}
+    if err := DB.First(&team, vars["id1"]).Error; err != nil {
+        errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
+        jsonResponse(w, Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id1"], errorMessage), nil})
+        return
+    }
+    if (game.Status != NewGame) {
+        jsonResponse(w, Response{false, http.StatusForbidden, fmt.Sprintf("game status must be %d", NewGame), nil})
+        return
+    }
+    members := []Member{}
+    DB.Model(&team).Association("Members").Find(&members)
+    if len(members) < MinNumMembers || len(members) > MaxNumMembers {
+        s := fmt.Sprintf("team must contain between %d and %d members", MinNumMembers, MaxNumMembers)
+        jsonResponse(w, Response{false, http.StatusForbidden, s, nil})
+        return
+    }
+
+    if  DB.Model(&game).Association("Teams").Count() == 0 {  // this team is first team
+        DB.Model(&game).Association("Teams").Append(&team)
+        DB.Model(&game).Association("Members").Append(&members)
+        jsonResponse(w, Response{true, http.StatusOK, "first team ok", nil})
+        return
+    }
+    prevTeam := Team{}
+    prevMembers := []Member{}
+    DB.Model(&game).Association("Teams").Find(&prevTeam)
+    DB.Model(&game).Association("Members").Find(&prevMembers)
+    if prevTeam.ID == team.ID {
+        jsonResponse(w, Response{false, http.StatusForbidden, "teams cannot be the same", nil})
+        return
+    }
+    if len(prevMembers) != len(members) {
+        jsonResponse(w, Response{false, http.StatusForbidden, "teams must have same number of players", nil})
+        return
+    }
+    if haveSharedMembers(prevMembers, members) {
+        jsonResponse(w, Response{false, http.StatusForbidden, "teams cannot have shared members", nil})
+        return
+    }
+    DB.Model(&game).Association("Teams").Append(&team)
+    DB.Model(&game).Association("Members").Append(&members)
+    game.Status = StartedGame
+    DB.Save(&game)
+    fmt.Printf("game: +%v\n", game)
+    jsonResponse(w, Response{true, http.StatusOK, "second team ok", nil})
+}
+
+
+func createGame(w http.ResponseWriter, r *http.Request) {
+    createEmpty(w, r, &Game{})
+}
+
+func getAllGames(w http.ResponseWriter, r *http.Request) {
+    getAllRecords(w, r, &[]Game{})
+}
+
+func getNewGames(w http.ResponseWriter, r *http.Request) {
+    getRecordsWhere(w, r, &[]Game{}, "status = ?", NewGame)
+}
+
+func getStartedGames(w http.ResponseWriter, r *http.Request) {
+    getRecordsWhere(w, r, &[]Game{}, "status = ?", StartedGame)
+}
+
+func getFinishedGames(w http.ResponseWriter, r *http.Request) {
+    getRecordsWhere(w, r, &[]Game{}, "status = ?", FinishedGame)
+}
 
 // create new record
 func createAchievement(w http.ResponseWriter, r *http.Request) {
-    createRecord(w, r, &Achievement{})
+    createFromData(w, r, &Achievement{})
 }
 func createMember(w http.ResponseWriter, r *http.Request) {
-    createRecord(w, r, &Member{})
+    createFromData(w, r, &Member{})
 }
 func createTeam(w http.ResponseWriter, r *http.Request) {
-    createRecord(w, r, &Team{})
+    createFromData(w, r, &Team{})
 }
 
 // get record by id
 func getAchievement(w http.ResponseWriter, r *http.Request) {
-    getRecord(w, r, &Achievement{})
+    getRecordByID(w, r, &Achievement{})
 }
 func getMember(w http.ResponseWriter, r *http.Request) {
-    getRecord(w, r, &Member{})
+    getRecordByID(w, r, &Member{})
 }
 func getTeam(w http.ResponseWriter, r *http.Request) {
-    getRecord(w, r, &Team{})
+    getRecordByID(w, r, &Team{})
 }
 
 // get all records
