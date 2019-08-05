@@ -294,7 +294,7 @@ func addGameTeam(w http.ResponseWriter, r *http.Request) {
 }
 
 // check if two teams share members
-func haveSharedMembers(teamA []Member, teamB []Member) bool {
+func haveSharedMembers(teamA, teamB []Member) bool {
     for _, memberA := range teamA {
         for _, memberB := range teamB {
             if memberA.ID == memberB.ID {
@@ -336,7 +336,7 @@ func translateError(code int, msg string) (int, string) {
 }
 
 // get record where .. condition a b c
-func getRecordsWhereABC(w http.ResponseWriter, r *http.Request, model interface{}, a interface{}, b interface{}, c interface{}) {
+func getRecordsWhereABC(w http.ResponseWriter, r *http.Request, model, a, b, c interface{}) {
     var count int
     if err := DB.Where(a, b, c).Find(model).Count(&count).Error; err != nil {
         errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
@@ -382,7 +382,7 @@ func getGameMemberStats(w http.ResponseWriter, r *http.Request) {
 }
 
 // update record where .. condition a b c
-func updateRecordWhereABC(w http.ResponseWriter, r *http.Request, model interface{}, a interface{}, b interface{}, c interface{}) {
+func updateRecordWhereABC(w http.ResponseWriter, r *http.Request, model, a, b, c interface{}) {
     if err := DB.Where(a, b, c).First(model).Error; err != nil {
         errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
         jsonResponse(w, Response{false, errorCode, errorMessage, nil})
@@ -564,14 +564,14 @@ func deleteTeam(w http.ResponseWriter, r *http.Request) {
 }
 
 // get association records
-func getAssociationRecords(w http.ResponseWriter, r *http.Request, a interface{}, b string, c interface{}) {
+func getAssociationRecords(w http.ResponseWriter, r *http.Request, a, b, c interface{}) {
     vars := mux.Vars(r)
     if err := DB.First(a, vars["id0"]).Error; err != nil {
         errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
         jsonResponse(w, Response{false, errorCode, errorMessage, nil})
         return
     }
-    DB.Model(a).Association(b).Find(c)
+    DB.Model(a).Association(b.(string)).Find(c)
     jsonResponse(w, Response{true, http.StatusOK, "ok", c})
 }
 
@@ -606,7 +606,7 @@ func getGameTeams(w http.ResponseWriter, r *http.Request) {
 }
 
 // add association records
-func addAssociationRecord(w http.ResponseWriter, r *http.Request, a interface{}, b string, c interface{}) {
+func addAssociationRecord(w http.ResponseWriter, r *http.Request, a, b, c interface{}) {
     vars := mux.Vars(r)
     if err := DB.First(a, vars["id0"]).Error; err != nil {
         errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
@@ -618,7 +618,7 @@ func addAssociationRecord(w http.ResponseWriter, r *http.Request, a interface{},
         jsonResponse(w, Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id1"], errorMessage), nil})
         return
     }
-    DB.Model(a).Association(b).Append(c)
+    DB.Model(a).Association(b.(string)).Append(c)
     jsonResponse(w, Response{true, http.StatusOK, "ok", nil})
 }
 
@@ -631,7 +631,7 @@ func addMemberTeam(w http.ResponseWriter, r *http.Request) {
 }
 
 // remove association records
-func removeAssociationRecord(w http.ResponseWriter, r *http.Request, a interface{}, b string, c interface{}) {
+func removeAssociationRecord(w http.ResponseWriter, r *http.Request, a, b, c interface{}) {
     vars := mux.Vars(r)
     if err := DB.First(a, vars["id0"]).Error; err != nil {
         errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
@@ -643,7 +643,7 @@ func removeAssociationRecord(w http.ResponseWriter, r *http.Request, a interface
         jsonResponse(w, Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id1"], errorMessage), nil})
         return
     }
-    DB.Model(a).Association(b).Delete(c)
+    DB.Model(a).Association(b.(string)).Delete(c)
     jsonResponse(w, Response{true, http.StatusOK, "ok", nil})
 }
 
