@@ -42,7 +42,8 @@ type Team struct {
 
 type GameStatus     int
 const (
-        NewGame         GameStatus = iota
+        NewGame         GameStatus = iota + 1
+        PendingGame
         StartedGame
         FinishedGame
     )
@@ -138,14 +139,25 @@ func getAllRecords(w http.ResponseWriter, r *http.Request, model interface{}) {
     jsonResponse(w, Response{true, http.StatusOK, "ok", model})
 }
 
-func getRecordsWhere(w http.ResponseWriter, r *http.Request, model interface{}, where ...interface{}) {
-    if err := DB.Find(model, where).Error; err != nil {
+func getRecordsWhereAB(w http.ResponseWriter, r *http.Request, model interface{}, a interface{}, b interface{}) {
+    if err := DB.Where(a, b).Find(model).Error; err != nil {
         errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
         jsonResponse(w, Response{false, errorCode, errorMessage, nil})
         return
     }
     jsonResponse(w, Response{true, http.StatusOK, "ok", model})
 }
+
+func getRecordsWhereABC(w http.ResponseWriter, r *http.Request, model interface{}, a interface{}, b interface{}, c interface{}) {
+    if err := DB.Where(a, b, c).Find(model).Error; err != nil {
+        errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
+        jsonResponse(w, Response{false, errorCode, errorMessage, nil})
+        return
+    }
+    jsonResponse(w, Response{true, http.StatusOK, "ok", model})
+}
+
+
 
 // first find existing record to populate struct with all extra data: ID, CreatedAt, UpdatedAt, etc
 // load updated data from request body into same struct and save 
@@ -192,6 +204,7 @@ func dbInit() *gorm.DB {
     db.AutoMigrate(&Achievement{}, &Member{}, &Team{}, &Game{}, &Stat{})
     return db
 }
+//  get/add/remove association records
 
 func getAssociationRecords(w http.ResponseWriter, r *http.Request, a interface{}, b string, c interface{}) {
     vars := mux.Vars(r)
@@ -203,7 +216,6 @@ func getAssociationRecords(w http.ResponseWriter, r *http.Request, a interface{}
     DB.Model(a).Association(b).Find(c)
     jsonResponse(w, Response{true, http.StatusOK, "ok", c})
 }
-
 
 func addAssociationRecord(w http.ResponseWriter, r *http.Request, a interface{}, b string, c interface{}) {
     vars := mux.Vars(r)
@@ -305,17 +317,18 @@ func main() {
     r.HandleFunc("/games", createGame).Methods("POST")
     r.HandleFunc("/games/all", getAllGames).Methods("GET")
     r.HandleFunc("/games/new", getNewGames).Methods("GET")
+    r.HandleFunc("/games/pending", getPendingGames).Methods("GET")
     r.HandleFunc("/games/started", getStartedGames).Methods("GET")
     r.HandleFunc("/games/finished", getFinishedGames).Methods("GET")
 
 
     // a team (id1) joins a game session (id0)
     r.HandleFunc("/gameTeams/{id0:[0-9]+}/{id1:[0-9]+}", addGameTeam).Methods("POST")
+    r.HandleFunc("/gameTeams/{id0:[0-9]+}", getGameTeams).Methods("GET")
 
-//
-//    r.HandleFunc("/gameStats/{id:[0-9]+}", getGameStats).Methods("GET")                             // list all stats for a given game
-//    r.HandleFunc("/teamStats/{id:[0-9]+}", getTeamStats).Methods("GET")                             // list all stats for a given team
-//    r.HandleFunc("/memberStats/{id:[0-9]+}", getMemberStats).Methods("GET")                         // list all stats for a given member
+    r.HandleFunc("/gameStats/{id0:[0-9]+}", getGameStats).Methods("GET")
+    r.HandleFunc("/gameTeamStats/{id0:[0-9]+}/{id1:[0-9]+}", getGameTeamStats).Methods("GET")
+    r.HandleFunc("/gameMemberStats/{id0:[0-9]+}/{id1:[0-9]+}", getGameMemberStats).Methods("GET")
 
 
     r.HandleFunc("/teams", createTeam).Methods("POST")
@@ -328,17 +341,48 @@ func main() {
     log.Fatal(http.ListenAndServe(":4242", r))
 }
 
+func getGameStats(w http.ResponseWriter, r *http.Request) {
+    v := mux.Vars(r)
+    getRecordsWhereAB(w, r, &[]Stat{}, "game_id = ?", v["id0"])
+}
 
-//
+func getGameTeamStats(w http.ResponseWriter, r *http.Request) {
+    v := mux.Vars(r)
+    getRecordsWhereABC(w, r, &[]Stat{}, "game_id = ? AND team_id = ?", v["id0"], v["id1"])
+}
+
+func getGameMemberStats(w http.ResponseWriter, r *http.Request) {
+    v := mux.Vars(r)
+    getRecordsWhereABC(w, r, &[]Stat{}, "game_id = ? AND member_id = ?", v["id0"], v["id1"])
+}
+
+func getGameTeams(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    game := Game{}
+
+    if err := DB.First(&game, vars["id0"]).Error; err != nil {          // game not found
+        errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
+        jsonResponse(w, Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id0"], errorMessage), nil})
+        return
+    }
+    DB.Model(&game).Association("Teams").Find(&game.Teams)
+    DB.Model(&game).Association("Members").Find(&game.Members)
+    jsonResponse(w, Response{true, http.StatusOK, "ok", game})
+}
+
 // logic: 
-//    - a game can only have two teams
-//    - once a new game is created it has 0 teams and its status is `NewGame`
-//    - first team to join must have between 3 and 5 members, otherwise error
-//    - second team to join must have same number of members as first team, otherwise error
-//    - the two teams cannot be the same
-//    - the two teams cannot have shared members
-//    - once second team joins game status is changed to `StartedGame`
-//
+//      - a game can only have two teams
+//      - once a new game is created it has 0 teams and its status is `NewGame`
+//      - first team to join must have between 3 and 5 members, otherwise error
+//      - after first team joins, status is changed to `PendingGame`
+//      - note: its possible that first team add/removes/updates members while status is `PendingGame`
+//              if the number of team members becomes < 3 or > 5,
+//              then team will be removed from game and game status reset to `NewGame`
+//      - second team to join must have same number of members as first team, otherwise error
+//      - the two teams cannot be the same
+//      - the two teams cannot have shared members
+//      - once second team joins game status is changed to `StartedGame`
+//      - empty stats are created for each team member of both teams
 
 const MinNumMembers = 3
 const MaxNumMembers = 5
@@ -374,20 +418,24 @@ func addGameTeam(w http.ResponseWriter, r *http.Request) {
         jsonResponse(w, Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id0"], errorMessage), nil})
         return
     }
-    if (game.Status != NewGame) {
-        jsonResponse(w, Response{false, http.StatusForbidden, fmt.Sprintf("game status must be %d", NewGame), nil})
+    if (game.Status != NewGame) && (game.Status != PendingGame) {
+        s := fmt.Sprintf("cannot join game, status must be %d or %d", NewGame, PendingGame)
+        jsonResponse(w, Response{false, http.StatusForbidden, s, nil})
         return
     }
 
     if  DB.Model(&game).Association("Teams").Count() != 0 {             // load 1st team
         DB.Model(&game).Association("Teams").Find(&prevTeam)
+        DB.Model(&game).Association("Members").Find(&prevTeam.Members)  // reload game members
         DB.Model(&prevTeam).Association("Members").Find(&prevTeam.Members)
+        DB.Save(&game)
     }
 
-    // it is possible that 1st team added or removed members while waiting for 2nd team
-    // if so, remove 1st team from game
     if len(prevTeam.Members) < MinNumMembers || len(prevTeam.Members) > MaxNumMembers {
-        DB.Model(&game).Association("Teams").Delete(&prevTeam)
+        DB.Model(&game).Association("Members").Clear()
+        DB.Model(&game).Association("Teams").Clear()
+        game.Status = NewGame
+        DB.Save(&game)
     }
 
     if err := DB.First(&team, vars["id1"]).Error; err != nil {
@@ -405,7 +453,10 @@ func addGameTeam(w http.ResponseWriter, r *http.Request) {
 
     if  DB.Model(&game).Association("Teams").Count() == 0 {             // this team is first team
         DB.Model(&game).Association("Teams").Append(&team)
-        jsonResponse(w, Response{true, http.StatusOK, "first team ok", nil})
+        DB.Model(&game).Association("Members").Append(&team.Members)
+        game.Status = PendingGame
+        DB.Save(&game)
+        getGameTeams(w, r)
         return
     }
 
@@ -422,19 +473,16 @@ func addGameTeam(w http.ResponseWriter, r *http.Request) {
         return
     }
     DB.Model(&game).Association("Teams").Append(&team)                  // add 2nd team to game
-    DB.Model(&game).Association("Members").Append(&prevTeam.Members)    // add players from both teams to game
     DB.Model(&game).Association("Members").Append(&team.Members)        //
     game.Status = StartedGame
     createStats(&game, &team, &team.Members)
     createStats(&game, &prevTeam, &prevTeam.Members)
     DB.Save(&game)
-    fmt.Printf("game: +%v\n", game)
-    jsonResponse(w, Response{true, http.StatusOK, "second team ok", nil})
+    getGameTeams(w, r)
 }
 
-
 func createGame(w http.ResponseWriter, r *http.Request) {
-    createEmpty(w, r, &Game{})
+    createEmpty(w, r, &Game{Status: NewGame})
 }
 
 func getAllGames(w http.ResponseWriter, r *http.Request) {
@@ -442,15 +490,19 @@ func getAllGames(w http.ResponseWriter, r *http.Request) {
 }
 
 func getNewGames(w http.ResponseWriter, r *http.Request) {
-    getRecordsWhere(w, r, &[]Game{}, "status = ?", NewGame)
+    getRecordsWhereAB(w, r, &[]Game{}, "status = ?", NewGame)
+}
+
+func getPendingGames(w http.ResponseWriter, r *http.Request) {
+    getRecordsWhereAB(w, r, &[]Game{}, "status = ?", PendingGame)
 }
 
 func getStartedGames(w http.ResponseWriter, r *http.Request) {
-    getRecordsWhere(w, r, &[]Game{}, "status = ?", StartedGame)
+    getRecordsWhereAB(w, r, &[]Game{}, "status = ?", StartedGame)
 }
 
 func getFinishedGames(w http.ResponseWriter, r *http.Request) {
-    getRecordsWhere(w, r, &[]Game{}, "status = ?", FinishedGame)
+    getRecordsWhereAB(w, r, &[]Game{}, "status = ?", FinishedGame)
 }
 
 // create new record
