@@ -74,7 +74,9 @@ type Response struct {
     Result          interface{}     `json:"result"`
 }
 
+
 var DB *gorm.DB
+const ServerAddress = "0.0.0.0:4242"
 
 const MinNumMembers = 3
 const MaxNumMembers = 5
@@ -127,8 +129,8 @@ func main() {
     r.HandleFunc("/games/{id0:[0-9]+}/members/{id1:[0-9]+}/stats", getGameMemberStats).Methods("GET")
     r.HandleFunc("/games/{id0:[0-9]+}/members/{id1:[0-9]+}/stats", updateGameMemberStats).Methods("PUT")    // update game member stats
 
-    fmt.Println("listening on :4242")
-    log.Fatal(http.ListenAndServe(":4242", r))
+    fmt.Printf("listening on %s\n", ServerAddress)
+    log.Fatal(http.ListenAndServe(ServerAddress, r))
 }
 
 
@@ -292,10 +294,10 @@ func addGameTeam(w http.ResponseWriter, r *http.Request) {
 }
 
 // check if two teams share members
-func haveSharedMembers(a []Member, b []Member) bool {
-    for _, i := range a {
-        for _, j := range b {
-            if i.ID == j.ID {
+func haveSharedMembers(teamA []Member, teamB []Member) bool {
+    for _, memberA := range teamA {
+        for _, memberB := range teamB {
+            if memberA.ID == memberB.ID {
                 return true
             }
         }
@@ -304,13 +306,9 @@ func haveSharedMembers(a []Member, b []Member) bool {
 }
 
 // create empty stats for team members
-func createEmptyStats(g *Game, t *Team, m *[]Member) {
-    for _, i := range *m {
-        r := Stat{}
-        r.GameID = g.ID
-        r.TeamID = t.ID
-        r.MemberID = i.ID
-        DB.Create(&r)
+func createEmptyStats(game *Game, team *Team, members *[]Member) {
+    for _, member := range *members {
+        DB.Create(&Stat{GameID: game.ID, TeamID: team.ID, MemberID: member.ID})
     }
 }
 
