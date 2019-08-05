@@ -52,10 +52,10 @@ type Game struct {
 }
 
 type Stat struct {
-    gorm.Model
-    GameID          uint            `json:"game_id"`
-    TeamID          uint            `json:"team_id"`
-    MemberID        uint            `json:"member_id"`
+    gorm.Model                      `json:"-"`
+    GameID          uint            `json:"-"`
+    TeamID          uint            `json:"-"`
+    MemberID        uint            `json:"-"`
     NumAttacks      uint            `json:"num_attacks"`
     NumHits         uint            `json:"num_hits"`
     AmountDamage    uint            `json:"amount_damage"`
@@ -64,6 +64,7 @@ type Stat struct {
     NumAssists      uint            `json:"num_assists"`
     NumSpells       uint            `json:"num_spells"`
     SpellsDamage    uint            `json:"spells_damage"`
+    IsWinner        bool            `json:"-"`
 }
 
 type Response struct {
@@ -130,6 +131,60 @@ func main() {
     log.Fatal(http.ListenAndServe(":4242", r))
 }
 
+
+func setGameWinner(game *Game) {
+    teams := []Team{}
+    stats := []Stat{}
+    calc := [2]Stat{}
+    var idx int
+    DB.Model(game).Association("Teams").Find(&teams)
+    DB.Model(game).Association("Stats").Find(&stats)
+    for _, stat := range stats {
+        idx = 0
+        if stat.TeamID == teams[1].ID {
+            idx = 1
+        }
+        calc[idx].NumAttacks += stat.NumAttacks
+        calc[idx].NumHits += stat.NumHits
+        calc[idx].AmountDamage += stat.AmountDamage
+        calc[idx].NumKills += stat.NumKills
+        calc[idx].InstantKills += stat.InstantKills
+        calc[idx].NumAssists += stat.NumAssists
+        calc[idx].NumSpells += stat.NumSpells
+        calc[idx].SpellsDamage += stat.SpellsDamage
+    }
+    idx = -1
+    switch {
+    case calc[0].NumKills > calc[1].NumKills: idx = 0
+    case calc[0].NumKills < calc[1].NumKills: idx = 1
+    case calc[0].AmountDamage > calc[1].AmountDamage: idx = 0
+    case calc[0].AmountDamage < calc[1].AmountDamage: idx = 1
+    case calc[0].NumHits > calc[1].NumHits: idx = 0
+    case calc[0].NumHits < calc[1].NumHits: idx = 1
+    case calc[0].NumAttacks > calc[1].NumAttacks: idx = 0
+    case calc[0].NumAttacks < calc[1].NumAttacks: idx = 1
+    case calc[0].InstantKills > calc[1].InstantKills: idx = 0
+    case calc[0].InstantKills < calc[1].InstantKills: idx = 1
+    case calc[0].NumAssists > calc[1].NumAssists: idx = 0
+    case calc[0].NumAssists < calc[1].NumAssists: idx = 1
+    case calc[0].SpellsDamage > calc[1].SpellsDamage: idx = 0
+    case calc[0].SpellsDamage < calc[1].SpellsDamage: idx = 1
+    case calc[0].NumSpells > calc[1].NumSpells: idx = 0
+    case calc[0].NumSpells < calc[1].NumSpells: idx = 1
+    }
+    if idx == -1 {      // tie
+        return
+    }
+    for _, stat := range stats {
+        if stat.TeamID == teams[idx].ID {
+            stat.IsWinner = true
+        } else {
+            stat.IsWinner = false
+        }
+        DB.Save(&stat)
+    }
+}
+
 func endGame(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
     game := Game{}
@@ -143,6 +198,7 @@ func endGame(w http.ResponseWriter, r *http.Request) {
         return
     }
     game.Status = FinishedGame
+    setGameWinner(&game)
     DB.Save(&game)
     jsonResponse(w, Response{true, http.StatusOK, "ok", game})
 }
@@ -180,8 +236,8 @@ func addGameTeam(w http.ResponseWriter, r *http.Request) {
     if  DB.Model(&game).Association("Teams").Count() != 0 {             // load 1st team
         DB.Model(&game).Association("Teams").Find(&prevTeam)
         DB.Model(&game).Association("Members").Clear()
-        DB.Model(&game).Association("Members").Find(&prevTeam.Members)  // reload game members
         DB.Model(&prevTeam).Association("Members").Find(&prevTeam.Members)
+        DB.Model(&game).Association("Members").Append(&prevTeam.Members)  // reload game members
         DB.Save(&game)
     }
 
@@ -227,7 +283,7 @@ func addGameTeam(w http.ResponseWriter, r *http.Request) {
         return
     }
     DB.Model(&game).Association("Teams").Append(&team)                  // add 2nd team to game
-    DB.Model(&game).Association("Members").Append(&team.Members)        //
+    DB.Model(&game).Association("Members").Append(&team.Members)
     game.Status = StartedGame
     createEmptyStats(&game, &team, &team.Members)
     createEmptyStats(&game, &prevTeam, &prevTeam.Members)
@@ -351,7 +407,7 @@ func updateRecordWhereABC(w http.ResponseWriter, r *http.Request, model interfac
 func updateGameMemberStats(w http.ResponseWriter, r *http.Request) {
     v := mux.Vars(r)
     game := Game{}
-    if err := DB.First(game, v["id0"]).Error; err != nil {
+    if err := DB.First(&game, v["id0"]).Error; err != nil {
         errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
         jsonResponse(w, Response{false, errorCode, errorMessage, nil})
         return
