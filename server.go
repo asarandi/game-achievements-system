@@ -60,17 +60,17 @@ type Game struct {
 
 type Stat struct {
     gorm.Model
-    GameID          uint             `json:"game_id,omitempty"`
-    TeamID          uint             `json:"team_id,omitempty"`
-    MemberID        uint             `json:"member_id,omitempty"`
-    NumAttacks      uint             `json:"num_attacks,omitempty"`
-    NumHits         uint             `json:"num_hits,omitempty"`
-    AmountDamage    uint             `json:"amount_damage,omitempty"`
-    NumKills        uint             `json:"num_kills,omitempty"`
-    InstantKills    uint             `json:"instant_kills,omitempty"`
-    NumAssists      uint             `json:"num_assists,omitempty"`
-    NumSpells       uint             `json:"num_spells,omitempty"`
-    SpellsDamage    uint             `json:"spells_damage,omitempty"`
+    GameID          uint            `json:"game_id"`
+    TeamID          uint            `json:"team_id"`
+    MemberID        uint            `json:"member_id"`
+    NumAttacks      uint            `json:"num_attacks"`
+    NumHits         uint            `json:"num_hits"`
+    AmountDamage    uint            `json:"amount_damage"`
+    NumKills        uint            `json:"num_kills"`
+    InstantKills    uint            `json:"instant_kills"`
+    NumAssists      uint            `json:"num_assists"`
+    NumSpells       uint            `json:"num_spells"`
+    SpellsDamage    uint            `json:"spells_damage"`
 }
 
 
@@ -139,15 +139,6 @@ func getAllRecords(w http.ResponseWriter, r *http.Request, model interface{}) {
     jsonResponse(w, Response{true, http.StatusOK, "ok", model})
 }
 
-func getRecordsWhereAB(w http.ResponseWriter, r *http.Request, model interface{}, a interface{}, b interface{}) {
-    if err := DB.Where(a, b).Find(model).Error; err != nil {
-        errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-        jsonResponse(w, Response{false, errorCode, errorMessage, nil})
-        return
-    }
-    jsonResponse(w, Response{true, http.StatusOK, "ok", model})
-}
-
 func getRecordsWhereABC(w http.ResponseWriter, r *http.Request, model interface{}, a interface{}, b interface{}, c interface{}) {
     if err := DB.Where(a, b, c).Find(model).Error; err != nil {
         errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
@@ -158,6 +149,24 @@ func getRecordsWhereABC(w http.ResponseWriter, r *http.Request, model interface{
 }
 
 
+func updateRecordWhereABC(w http.ResponseWriter, r *http.Request, model interface{}, a interface{}, b interface{}, c interface{}) {
+    if err := DB.Where(a, b, c).First(model).Error; err != nil {
+        errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
+        jsonResponse(w, Response{false, errorCode, errorMessage, nil})
+        return
+    }
+    decoder := json.NewDecoder(r.Body)
+    if err := decoder.Decode(model); err != nil {
+        jsonResponse(w, Response{false, http.StatusBadRequest, err.Error(), nil})
+        return
+    }
+    if err := DB.Save(model).Error; err != nil {
+        errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
+        jsonResponse(w, Response{false, errorCode, errorMessage, nil})
+        return
+    }
+    jsonResponse(w, Response{true, http.StatusOK, "ok", model})
+}
 
 // first find existing record to populate struct with all extra data: ID, CreatedAt, UpdatedAt, etc
 // load updated data from request body into same struct and save 
@@ -315,7 +324,7 @@ func main() {
 
 
     r.HandleFunc("/games", createGame).Methods("POST")
-    r.HandleFunc("/games/all", getAllGames).Methods("GET")
+    r.HandleFunc("/games", getAllGames).Methods("GET")
     r.HandleFunc("/games/new", getNewGames).Methods("GET")
     r.HandleFunc("/games/pending", getPendingGames).Methods("GET")
     r.HandleFunc("/games/started", getStartedGames).Methods("GET")
@@ -328,8 +337,9 @@ func main() {
 
     r.HandleFunc("/gameStats/{id0:[0-9]+}", getGameStats).Methods("GET")
     r.HandleFunc("/gameTeamStats/{id0:[0-9]+}/{id1:[0-9]+}", getGameTeamStats).Methods("GET")
-    r.HandleFunc("/gameMemberStats/{id0:[0-9]+}/{id1:[0-9]+}", getGameMemberStats).Methods("GET")
 
+    r.HandleFunc("/gameMemberStats/{id0:[0-9]+}/{id1:[0-9]+}", getGameMemberStats).Methods("GET")
+    r.HandleFunc("/gameMemberStats/{id0:[0-9]+}/{id1:[0-9]+}", updateGameMemberStats).Methods("PUT")
 
     r.HandleFunc("/teams", createTeam).Methods("POST")
     r.HandleFunc("/teams/{id:[0-9]+}", getTeam).Methods("GET")
@@ -343,7 +353,7 @@ func main() {
 
 func getGameStats(w http.ResponseWriter, r *http.Request) {
     v := mux.Vars(r)
-    getRecordsWhereAB(w, r, &[]Stat{}, "game_id = ?", v["id0"])
+    getRecordsWhereABC(w, r, &[]Stat{}, "game_id = ?", v["id0"], nil)
 }
 
 func getGameTeamStats(w http.ResponseWriter, r *http.Request) {
@@ -354,6 +364,11 @@ func getGameTeamStats(w http.ResponseWriter, r *http.Request) {
 func getGameMemberStats(w http.ResponseWriter, r *http.Request) {
     v := mux.Vars(r)
     getRecordsWhereABC(w, r, &[]Stat{}, "game_id = ? AND member_id = ?", v["id0"], v["id1"])
+}
+
+func updateGameMemberStats(w http.ResponseWriter, r *http.Request) {
+    v := mux.Vars(r)
+    updateRecordWhereABC(w, r, &Stat{}, "game_id = ? AND member_id = ?", v["id0"], v["id1"])
 }
 
 func getGameTeams(w http.ResponseWriter, r *http.Request) {
@@ -490,19 +505,19 @@ func getAllGames(w http.ResponseWriter, r *http.Request) {
 }
 
 func getNewGames(w http.ResponseWriter, r *http.Request) {
-    getRecordsWhereAB(w, r, &[]Game{}, "status = ?", NewGame)
+    getRecordsWhereABC(w, r, &[]Game{}, "status = ?", NewGame, nil)
 }
 
 func getPendingGames(w http.ResponseWriter, r *http.Request) {
-    getRecordsWhereAB(w, r, &[]Game{}, "status = ?", PendingGame)
+    getRecordsWhereABC(w, r, &[]Game{}, "status = ?", PendingGame, nil)
 }
 
 func getStartedGames(w http.ResponseWriter, r *http.Request) {
-    getRecordsWhereAB(w, r, &[]Game{}, "status = ?", StartedGame)
+    getRecordsWhereABC(w, r, &[]Game{}, "status = ?", StartedGame, nil)
 }
 
 func getFinishedGames(w http.ResponseWriter, r *http.Request) {
-    getRecordsWhereAB(w, r, &[]Game{}, "status = ?", FinishedGame)
+    getRecordsWhereABC(w, r, &[]Game{}, "status = ?", FinishedGame, nil)
 }
 
 // create new record
