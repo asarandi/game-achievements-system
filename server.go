@@ -87,7 +87,6 @@ const (
         FinishedGame
 )
 
-
 type AchievementSlugFunction struct {achievement Achievement; slug string; function func(Stat)bool}
 
 //the string should match the `slug` in achievements sql table
@@ -139,15 +138,7 @@ func isBigwinnerAward(stat Stat) bool {
 }
 
 func main() {
-
     DB = dbInit()
-
-    for i, _ := range ASF {
-        if err := DB.First(&ASF[i].achievement, &Achievement{Slug: ASF[i].slug}).Error; err != nil {
-            ASF[i].achievement.ID = 0
-        }
-    }
-
     r := mux.NewRouter()
 
     r.HandleFunc("/achievements", getAllAchievements).Methods("GET")                                        // get all records
@@ -190,7 +181,6 @@ func main() {
     fmt.Printf("listening on %s\n", ServerAddress)
     log.Fatal(http.ListenAndServe(ServerAddress, r))
 }
-
 
 //compare each team's combined stats
 //if one team has better stats then
@@ -272,19 +262,23 @@ func isAwardedAlready(array []Achievement, ach Achievement) bool {
 func setMemberAchievements(game *Game) {
     members := getWinnersByGameID(game.ID)
     stats := []Stat{}
-    for i, _ := range members {
+    for i := range members {
         DB.Model(&members[i]).Association("Achievements").Find(&members[i].Achievements)
         stat := Stat{GameID: game.ID, MemberID: members[i].ID}
         DB.First(&stat, &stat)
         stats = append(stats, stat)
     }
-    for i, _ := range members {
-        for j, _ := range ASF {
+    for i := range ASF {
+        if err := DB.First(&ASF[i].achievement, &Achievement{Slug: ASF[i].slug}).Error; err != nil {
+            ASF[i].achievement.ID = 0
+        }
+    }
+    for i := range members {
+        for j := range ASF {
             if ASF[j].achievement.ID == 0 { continue ; }       // failed to preload
             if isAwardedAlready(members[i].Achievements, ASF[j].achievement) { continue ; }
             if !ASF[j].function(stats[i]) { continue ; }
             DB.Model(&members[i]).Association("Achievements").Append(ASF[j].achievement)
-            fmt.Println("New Achievements!!", members[i])
         }
     }
 }
@@ -297,11 +291,10 @@ func endGame(w http.ResponseWriter, r *http.Request) {
         jsonResponse(w, Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id0"], errorMessage), nil})
         return
     }
-// debug XXX 
-//    if game.Status != StartedGame {
-//        jsonResponse(w, Response{false, http.StatusForbidden, "cannot change status on this game", nil})
-//        return
-//    }
+    if game.Status != StartedGame {
+        jsonResponse(w, Response{false, http.StatusForbidden, "cannot change status on this game", nil})
+        return
+    }
     game.Status = FinishedGame
     setGameWinner(&game)
     setMemberAchievements(&game)
@@ -398,9 +391,9 @@ func addGameTeam(w http.ResponseWriter, r *http.Request) {
 
 // check if two teams share members
 func isSharedMembers(teamA, teamB []Member) bool {
-    for _, memberA := range teamA {
-        for _, memberB := range teamB {
-            if memberA.ID == memberB.ID {
+    for i := range teamA {
+        for j := range teamB {
+            if teamA[i].ID == teamB[j].ID {
                 return true
             }
         }
