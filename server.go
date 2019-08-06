@@ -47,8 +47,6 @@ type Game struct {
     Teams           []Team          `gorm:"many2many:game_teams;" json:"teams,omitempty"`
     Members         []Member        `gorm:"many2many:game_members;" json:"members,omitempty"`
     Stats           []Stat          `json:"stats,omitempty"`
-    TeamID          uint            `json:"team_id,omitempty"`
-    Winner          Team            `json:"winner,omitempty"`
 }
 
 type Stat struct {
@@ -78,8 +76,8 @@ type Response struct {
 var DB *gorm.DB
 const ServerAddress = "0.0.0.0:4242"
 
-const MinNumMembers = 3
-const MaxNumMembers = 5
+const GameMinNumMembers = 3
+const GameMaxNumMembers = 5
 
 type GameStatus     int
 const (
@@ -89,8 +87,67 @@ const (
         FinishedGame
 )
 
+
+type AchievementSlugFunction struct {achievement Achievement; slug string; function func(Stat)bool}
+
+//the string should match the `slug` in achievements sql table
+var ASF = []AchievementSlugFunction {
+    {achievement: Achievement{}, slug: "sharpshooter", function: isSharpshooterAward},
+    {achievement: Achievement{}, slug: "bruiser",      function: isBruiserAward},
+    {achievement: Achievement{}, slug: "veteran",      function: isVeteranAward},
+    {achievement: Achievement{}, slug: "bigwinner",    function: isBigwinnerAward},
+}
+
+// “sharpshooter award” – a user receives this for landing 75% of their attacks, assuming they have at least attacked once.
+func isSharpshooterAward(stat Stat) bool {
+    if (stat.NumAttacks > 0) {
+        if (stat.NumHits * 100 / stat.NumAttacks) >= 75 {
+            return true
+        }
+    }
+    return false
+}
+
+//“bruiser” award – a user receives this for doing more than 500 points of damage in one game
+func isBruiserAward(stat Stat) bool {
+    if (stat.AmountDamage >= 500) {
+        return true
+    }
+    return false
+}
+
+//“veteran” award – a user receives this for playing more than 1000 games in their lifetime.
+func isVeteranAward(stat Stat) bool {
+    var count int
+    if  DB.Find(&Stat{}, Stat{MemberID: stat.MemberID}).Count(&count).Error == nil {
+       if count >= 1000 {
+            return true
+       }
+    }
+    return false
+}
+
+//“big winner” award – a user receives this for having 200 wins
+func isBigwinnerAward(stat Stat) bool {
+    var count int
+    if  DB.Find(&Stat{}, Stat{MemberID: stat.MemberID, IsWinner: true}).Count(&count).Error == nil {
+       if count >= 200 {
+            return true
+       }
+    }
+    return false
+}
+
 func main() {
+
     DB = dbInit()
+
+    for i, _ := range ASF {
+        if err := DB.First(&ASF[i].achievement, &Achievement{Slug: ASF[i].slug}).Error; err != nil {
+            ASF[i].achievement.ID = 0
+        }
+    }
+
     r := mux.NewRouter()
 
     r.HandleFunc("/achievements", getAllAchievements).Methods("GET")                                        // get all records
@@ -133,6 +190,7 @@ func main() {
     fmt.Printf("listening on %s\n", ServerAddress)
     log.Fatal(http.ListenAndServe(ServerAddress, r))
 }
+
 
 //compare each team's combined stats
 //if one team has better stats then
@@ -202,6 +260,35 @@ func getWinnersByGameID(gameID uint) []Member {
     return members
 }
 
+func isAwardedAlready(array []Achievement, ach Achievement) bool {
+    for _, item := range array {
+        if item.ID == ach.ID {
+            return true
+        }
+    }
+    return false
+}
+
+func setMemberAchievements(game *Game) {
+    members := getWinnersByGameID(game.ID)
+    stats := []Stat{}
+    for i, _ := range members {
+        DB.Model(&members[i]).Association("Achievements").Find(&members[i].Achievements)
+        stat := Stat{GameID: game.ID, MemberID: members[i].ID}
+        DB.First(&stat, &stat)
+        stats = append(stats, stat)
+    }
+    for i, _ := range members {
+        for j, _ := range ASF {
+            if ASF[j].achievement.ID == 0 { continue ; }       // failed to preload
+            if isAwardedAlready(members[i].Achievements, ASF[j].achievement) { continue ; }
+            if !ASF[j].function(stats[i]) { continue ; }
+            DB.Model(&members[i]).Association("Achievements").Append(ASF[j].achievement)
+            fmt.Println("New Achievements!!", members[i])
+        }
+    }
+}
+
 func endGame(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
     game := Game{}
@@ -217,9 +304,7 @@ func endGame(w http.ResponseWriter, r *http.Request) {
 //    }
     game.Status = FinishedGame
     setGameWinner(&game)
-//    setWinnerAchievements(&game)
-    fmt.Println(getWinnersByGameID(game.ID))
-    DB.Save(&game)
+    setMemberAchievements(&game)
     jsonResponse(w, Response{true, http.StatusOK, "ok", game})
 }
 
@@ -261,7 +346,7 @@ func addGameTeam(w http.ResponseWriter, r *http.Request) {
         DB.Save(&game)
     }
 
-    if len(prevTeam.Members) < MinNumMembers || len(prevTeam.Members) > MaxNumMembers {
+    if len(prevTeam.Members) < GameMinNumMembers || len(prevTeam.Members) > GameMaxNumMembers {
         DB.Model(&game).Association("Members").Clear()
         DB.Model(&game).Association("Teams").Clear()
         game.Status = NewGame
@@ -275,8 +360,8 @@ func addGameTeam(w http.ResponseWriter, r *http.Request) {
     }
 
     DB.Model(&team).Association("Members").Find(&team.Members)
-    if len(team.Members) < MinNumMembers || len(team.Members) > MaxNumMembers {
-        s := fmt.Sprintf("team must contain between %d and %d members", MinNumMembers, MaxNumMembers)
+    if len(team.Members) < GameMinNumMembers || len(team.Members) > GameMaxNumMembers {
+        s := fmt.Sprintf("team must contain between %d and %d members", GameMinNumMembers, GameMaxNumMembers)
         jsonResponse(w, Response{false, http.StatusForbidden, s, nil})
         return
     }
@@ -298,7 +383,7 @@ func addGameTeam(w http.ResponseWriter, r *http.Request) {
         jsonResponse(w, Response{false, http.StatusForbidden, "teams must have same number of players", nil})
         return
     }
-    if haveSharedMembers(prevTeam.Members, team.Members) {
+    if isSharedMembers(prevTeam.Members, team.Members) {
         jsonResponse(w, Response{false, http.StatusForbidden, "teams cannot have shared members", nil})
         return
     }
@@ -312,7 +397,7 @@ func addGameTeam(w http.ResponseWriter, r *http.Request) {
 }
 
 // check if two teams share members
-func haveSharedMembers(teamA, teamB []Member) bool {
+func isSharedMembers(teamA, teamB []Member) bool {
     for _, memberA := range teamA {
         for _, memberB := range teamB {
             if memberA.ID == memberB.ID {
