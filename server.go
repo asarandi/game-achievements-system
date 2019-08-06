@@ -126,6 +126,7 @@ func main() {
     r.HandleFunc("/games/{id0:[0-9]+}/teams", getGameTeams).Methods("GET")
     r.HandleFunc("/games/{id0:[0-9]+}/teams/{id1:[0-9]+}", addGameTeam).Methods("POST")                     // a team (id1) joins a game (id0)
     r.HandleFunc("/games/{id0:[0-9]+}/members", getGameMembers).Methods("GET")
+    r.HandleFunc("/games/{id0:[0-9]+}/winners", getGameWinners).Methods("GET")
     r.HandleFunc("/games/{id0:[0-9]+}/members/{id1:[0-9]+}/stats", getGameMemberStats).Methods("GET")
     r.HandleFunc("/games/{id0:[0-9]+}/members/{id1:[0-9]+}/stats", updateGameMemberStats).Methods("PUT")    // update game member stats
 
@@ -133,7 +134,9 @@ func main() {
     log.Fatal(http.ListenAndServe(ServerAddress, r))
 }
 
-
+//compare each team's combined stats
+//if one team has better stats then
+//set `bool is_winner` to true
 func setGameWinner(game *Game) {
     teams := []Team{}
     stats := []Stat{}
@@ -187,6 +190,18 @@ func setGameWinner(game *Game) {
     }
 }
 
+func getWinnersByGameID(gameID uint) []Member {
+    var ids []uint
+    stats := []Stat{}
+    members := []Member{}
+    DB.Where("game_id = ? AND is_winner = ?", gameID, true).Find(&stats)
+    for _, stat := range stats {
+        ids = append(ids, stat.MemberID)
+    }
+    DB.Where("ID IN (?)", ids).Find(&members)
+    return members
+}
+
 func endGame(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
     game := Game{}
@@ -195,12 +210,15 @@ func endGame(w http.ResponseWriter, r *http.Request) {
         jsonResponse(w, Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id0"], errorMessage), nil})
         return
     }
-    if game.Status != StartedGame {
-        jsonResponse(w, Response{false, http.StatusForbidden, "cannot change status on this game", nil})
-        return
-    }
+// debug XXX 
+//    if game.Status != StartedGame {
+//        jsonResponse(w, Response{false, http.StatusForbidden, "cannot change status on this game", nil})
+//        return
+//    }
     game.Status = FinishedGame
     setGameWinner(&game)
+//    setWinnerAchievements(&game)
+    fmt.Println(getWinnersByGameID(game.ID))
     DB.Save(&game)
     jsonResponse(w, Response{true, http.StatusOK, "ok", game})
 }
@@ -598,6 +616,18 @@ func getTeamMembers(w http.ResponseWriter, r *http.Request) {
 func getGameMembers(w http.ResponseWriter, r *http.Request) {
     model := Game{}
     getAssociationRecords(w, r, &model, "Members", &model.Members)
+}
+
+func getGameWinners(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    game := Game{}
+    if err := DB.First(&game, vars["id0"]).Error; err != nil {
+        errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
+        jsonResponse(w, Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id0"], errorMessage), nil})
+        return
+    }
+    winners := getWinnersByGameID(game.ID)
+    jsonResponse(w, Response{true, http.StatusOK, "ok", &winners})
 }
 
 func getGameTeams(w http.ResponseWriter, r *http.Request) {
