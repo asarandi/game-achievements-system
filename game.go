@@ -122,17 +122,17 @@ func endGame(w http.ResponseWriter, r *http.Request) {
 	game := Game{}
 	if err := db.First(&game, vars["id0"]).Error; err != nil {
 		errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-		jsonResponse(w, Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id0"], errorMessage), nil})
+		jsonResponse(w, &Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id0"], errorMessage), nil})
 		return
 	}
 	if game.Status != startedGame {
-		jsonResponse(w, Response{false, http.StatusForbidden, "cannot change status of this game", nil})
+		jsonResponse(w, &Response{false, http.StatusForbidden, "cannot change status of this game", nil})
 		return
 	}
 	game.Status = finishedGame
 	setGameWinner(&game)
 	setMemberAchievements(&game)
-	jsonResponse(w, Response{true, http.StatusOK, "ok", game})
+	jsonResponse(w, &Response{true, http.StatusOK, "ok", game})
 }
 
 // addGameTeam() logic:
@@ -156,12 +156,12 @@ func addGameTeam(w http.ResponseWriter, r *http.Request) {
 
 	if err := db.First(&game, vars["id0"]).Error; err != nil { // game not found
 		errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-		jsonResponse(w, Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id0"], errorMessage), nil})
+		jsonResponse(w, &Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id0"], errorMessage), nil})
 		return
 	}
 	if (game.Status != newGame) && (game.Status != pendingGame) {
 		s := fmt.Sprintf("cannot join game, status must be %d or %d", newGame, pendingGame)
-		jsonResponse(w, Response{false, http.StatusForbidden, s, nil})
+		jsonResponse(w, &Response{false, http.StatusForbidden, s, nil})
 		return
 	}
 
@@ -182,14 +182,14 @@ func addGameTeam(w http.ResponseWriter, r *http.Request) {
 
 	if err := db.First(&team, vars["id1"]).Error; err != nil {
 		errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-		jsonResponse(w, Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id1"], errorMessage), nil})
+		jsonResponse(w, &Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id1"], errorMessage), nil})
 		return
 	}
 
 	db.Model(&team).Association("Members").Find(&team.Members)
 	if len(team.Members) < gameMinNumMembers || len(team.Members) > gameMaxNumMembers {
 		s := fmt.Sprintf("team must contain between %d and %d members", gameMinNumMembers, gameMaxNumMembers)
-		jsonResponse(w, Response{false, http.StatusForbidden, s, nil})
+		jsonResponse(w, &Response{false, http.StatusForbidden, s, nil})
 		return
 	}
 
@@ -203,15 +203,15 @@ func addGameTeam(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if prevTeam.ID == team.ID {
-		jsonResponse(w, Response{false, http.StatusForbidden, "teams cannot be the same", nil})
+		jsonResponse(w, &Response{false, http.StatusForbidden, "teams cannot be the same", nil})
 		return
 	}
 	if len(prevTeam.Members) != len(team.Members) {
-		jsonResponse(w, Response{false, http.StatusForbidden, "teams must have same number of players", nil})
+		jsonResponse(w, &Response{false, http.StatusForbidden, "teams must have same number of players", nil})
 		return
 	}
 	if isSharedMembers(prevTeam.Members, team.Members) {
-		jsonResponse(w, Response{false, http.StatusForbidden, "teams cannot have shared members", nil})
+		jsonResponse(w, &Response{false, http.StatusForbidden, "teams cannot have shared members", nil})
 		return
 	}
 	db.Model(&game).Association("Teams").Append(&team) // add 2nd team to game

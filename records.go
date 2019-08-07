@@ -1,173 +1,85 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"github.com/gorilla/mux"
-	"net/http"
+	"errors"
 )
 
 // get record where .. condition a b c
-func getRecordsWhereABC(w http.ResponseWriter, r *http.Request, model, a, b, c interface{}) {
+func getAllRecordsWhereABC(model, a, b, c interface{}) error {
 	var count int
 	if err := db.Where(a, b, c).Find(model).Count(&count).Error; err != nil {
-		errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-		jsonResponse(w, Response{false, errorCode, errorMessage, nil})
-		return
+		return err
 	}
 	if count == 0 {
-		jsonResponse(w, Response{false, http.StatusNotFound, "record not found", nil})
-		return
+		return errors.New("record not found")
 	}
-	jsonResponse(w, Response{true, http.StatusOK, "ok", model})
+	return nil
+}
+
+func getRecordWhereABC(model, a, b, c interface{}) error {
+	return db.Where(a, b, c).First(model).Error
 }
 
 // update record where .. condition a b c
-func updateRecordWhereABC(w http.ResponseWriter, r *http.Request, model, a, b, c interface{}) {
-	if err := db.Where(a, b, c).First(model).Error; err != nil {
-		errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-		jsonResponse(w, Response{false, errorCode, errorMessage, nil})
-		return
+func updateRecordWhereABC(oldRecord, newRecord, a, b, c interface{}) error {
+	if err := db.Where(a, b, c).First(oldRecord).Error; err != nil {
+		return err
 	}
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(model); err != nil {
-		jsonResponse(w, Response{false, http.StatusBadRequest, err.Error(), nil})
-		return
-	}
-	if err := db.Save(model).Error; err != nil {
-		errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-		jsonResponse(w, Response{false, errorCode, errorMessage, nil})
-		return
-	}
-	jsonResponse(w, Response{true, http.StatusOK, "ok", model})
+	return db.Model(oldRecord).Omit("ID","CreatedAt","UpdatedAt","DeletedAt").Updates(newRecord).Error
 }
 
-// create new record
-func createFromData(w http.ResponseWriter, r *http.Request, model interface{}) {
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(model); err != nil {
-		jsonResponse(w, Response{false, http.StatusBadRequest, err.Error(), nil})
-		return
-	}
-	if err := db.Create(model).Error; err != nil {
-		errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-		jsonResponse(w, Response{false, errorCode, errorMessage, nil})
-		return
-	}
-	jsonResponse(w, Response{true, http.StatusCreated, "ok", model})
-}
-
-func createEmpty(w http.ResponseWriter, r *http.Request, model interface{}) {
-	if err := db.Create(model).Error; err != nil {
-		errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-		jsonResponse(w, Response{false, errorCode, errorMessage, nil})
-		return
-	}
-	jsonResponse(w, Response{true, http.StatusCreated, "ok", model})
+func createFromModel(model interface{}) error {
+	return db.Create(model).Error
 }
 
 // get all records
-func getAllRecords(w http.ResponseWriter, r *http.Request, model interface{}) {
-	if err := db.Find(model).Error; err != nil {
-		errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-		jsonResponse(w, Response{false, errorCode, errorMessage, nil})
-		return
-	}
-	jsonResponse(w, Response{true, http.StatusOK, "ok", model})
+func getAllRecords(model interface{}) error {
+	return db.Find(model).Error
 }
 
 // get record by id
-func getRecordByID(w http.ResponseWriter, r *http.Request, model interface{}) {
-	vars := mux.Vars(r)
-	if err := db.First(model, vars["id0"]).Error; err != nil {
-		errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-		jsonResponse(w, Response{false, errorCode, errorMessage, nil})
-		return
-	}
-	jsonResponse(w, Response{true, http.StatusOK, "ok", model})
+func getRecordByID(model, id interface{}) error {
+	return db.First(model, id).Error
 }
 
-// update record by id
-// logic: first find existing record to populate struct with all extras: ID, CreatedAt, UpdatedAt, etc
-// load updated data from request body into same struct and then save
-func updateRecordByID(w http.ResponseWriter, r *http.Request, model interface{}) {
-	vars := mux.Vars(r)
-	if err := db.First(model, vars["id0"]).Error; err != nil {
-		errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-		jsonResponse(w, Response{false, errorCode, errorMessage, nil})
-		return
+func updateRecordByID(oldRecord, newRecord, id interface{}) error {
+	if err := db.First(oldRecord, id).Error; err != nil {
+		return err
 	}
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(model); err != nil {
-		jsonResponse(w, Response{false, http.StatusBadRequest, err.Error(), nil})
-		return
-	}
-	if err := db.Save(model).Error; err != nil {
-		errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-		jsonResponse(w, Response{false, errorCode, errorMessage, nil})
-		return
-	}
-	jsonResponse(w, Response{true, http.StatusAccepted, "ok", model})
+	return db.Model(oldRecord).Omit("ID","CreatedAt","UpdatedAt","DeletedAt").Updates(newRecord).Error
 }
 
 // delete record by id
-func deleteRecordByID(w http.ResponseWriter, r *http.Request, model interface{}) {
-	vars := mux.Vars(r)
-	if err := db.First(model, vars["id0"]).Error; err != nil {
-		errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-		jsonResponse(w, Response{false, errorCode, errorMessage, nil})
-		return
-	}
-	if err := db.Delete(model).Error; err != nil {
-		errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-		jsonResponse(w, Response{false, errorCode, errorMessage, nil})
-		return
-	}
-	jsonResponse(w, Response{true, http.StatusNoContent, "ok", nil})
+func deleteRecordByID(model, id interface{}) error {
+	return db.Delete(model, id).Error
 }
 
-// get association records
-func getAssociationRecords(w http.ResponseWriter, r *http.Request, a, b, c interface{}) {
-	vars := mux.Vars(r)
-	if err := db.First(a, vars["id0"]).Error; err != nil {
-		errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-		jsonResponse(w, Response{false, errorCode, errorMessage, nil})
-		return
+// find association records
+func findAssociationRecords(modelA, idA, assoc, modelB interface{}) error {
+	if err := db.First(modelA, idA).Error; err != nil {
+		return err
 	}
-	db.Model(a).Association(b.(string)).Find(c)
-	jsonResponse(w, Response{true, http.StatusOK, "ok", c})
+	return db.Model(modelA).Association(assoc.(string)).Find(modelB).Error
 }
 
-// add association records
-func addAssociationRecord(w http.ResponseWriter, r *http.Request, a, b, c interface{}) {
-	vars := mux.Vars(r)
-	if err := db.First(a, vars["id0"]).Error; err != nil {
-		errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-		jsonResponse(w, Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id0"], errorMessage), nil})
-		return
+// append association records
+func appendAssociationRecord(modelA, idA, assoc, modelB, idB interface{}) error {
+	if err := db.First(modelA, idA).Error; err != nil {
+		return err
 	}
-	if err := db.First(c, vars["id1"]).Error; err != nil {
-		errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-		jsonResponse(w, Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id1"], errorMessage), nil})
-		return
+	if err := db.First(modelB, idB).Error; err != nil {
+		return err
 	}
-	db.Model(a).Association(b.(string)).Append(c)
-	jsonResponse(w, Response{true, http.StatusOK, "ok", nil})
+	return db.Model(modelA).Association(assoc.(string)).Append(modelB).Error
 }
 
-// remove association records
-func removeAssociationRecord(w http.ResponseWriter, r *http.Request, a, b, c interface{}) {
-	vars := mux.Vars(r)
-	if err := db.First(a, vars["id0"]).Error; err != nil {
-		errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-		jsonResponse(w, Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id0"], errorMessage), nil})
-		return
+// delete association records
+func deleteAssociationRecord(modelA, idA, assoc, modelB, idB interface{}) error {
+	if err := db.First(modelA, idA).Error; err != nil {
+		return err
 	}
-	if err := db.First(c, vars["id1"]).Error; err != nil {
-		errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-		jsonResponse(w, Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id1"], errorMessage), nil})
-		return
+	if err := db.First(modelB, idB).Error; err != nil {
+		return err
 	}
-	db.Model(a).Association(b.(string)).Delete(c)
-	jsonResponse(w, Response{true, http.StatusOK, "ok", nil})
+	return db.Model(modelA).Association(assoc.(string)).Delete(modelB).Error
 }
