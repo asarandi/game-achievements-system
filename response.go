@@ -35,7 +35,9 @@ func translateResponse(r *Response) {
 		r.Code = http.StatusForbidden
 	case r.Message == "teams cannot have shared members":
 		r.Code = http.StatusForbidden
-
+	case r.Message == "EOF":
+		r.Message = "unexpected end of data"
+		r.Code = http.StatusBadRequest
 	}
 }
 
@@ -59,8 +61,8 @@ func responseJson(w http.ResponseWriter, e error, model interface{}, successCode
 			Result:  model,
 		}
 	}
+	translateResponse(&res)
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(res.Code)
-	translateResponse(&res)
 	_ = json.NewEncoder(w).Encode(res)
 }

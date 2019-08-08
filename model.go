@@ -7,8 +7,8 @@ import (
 
 type Achievement struct {
 	gorm.Model
-	Slug    string   `gorm:"unique" json:"slug"`
-	Name    string   `gorm:"unique" json:"name"`
+	Slug    string   `gorm:"unique;not null" json:"slug"`
+	Name    string   `gorm:"unique;not null" json:"name"`
 	Desc    string   `json:"desc"`
 	Img     string   `json:"img"`
 	Members []Member `gorm:"many2many:member_achievements;" json:"members,omitempty"`
@@ -16,7 +16,7 @@ type Achievement struct {
 
 type Member struct {
 	gorm.Model
-	Name         string        `gorm:"unique" json:"name"`
+	Name         string        `gorm:"unique;not null" json:"name"`
 	Img          string        `json:"img"`
 	Achievements []Achievement `gorm:"many2many:member_achievements;" json:"achievements,omitempty"`
 	Teams        []Team        `gorm:"many2many:team_members;" json:"teams,omitempty"`
@@ -26,7 +26,7 @@ type Member struct {
 
 type Team struct {
 	gorm.Model
-	Name    string   `gorm:"unique" json:"name"`
+	Name    string   `gorm:"unique;not null" json:"name"`
 	Img     string   `json:"img"`
 	Members []Member `gorm:"many2many:team_members;" json:"members,omitempty"`
 	Games   []Game   `gorm:"many2many game_teams;" json:"games,omitempty"`

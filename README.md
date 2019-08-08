@@ -53,7 +53,7 @@ endpoint|GET|POST|PUT|DELETE|notes
 /games/{id:}/stats                  |&check;|       |       |       | **get** all stats for a game
 /games/{id:}/teams                  |&check;|       |       |       |**get** all teams that joined a game
 /games/{id:}/teams/{id:}            |       |&check;|       |       |**add** a team to a game;</br>team must contain 3-5 members;
-/games/{id:}/teams/{id:}/stats      |&check |       |       |       |**get** game stats for a team
+/games/{id:}/teams/{id:}/stats      |&check;|       |       |       |**get** game stats for a team
 /games/{id:}/members                |&check;|       |       |       |**get** all members of a game
 /games/{id:}/winners                |&check;|       |       |       |**get** all winning members of a game
 /games/{id:}/members/{id:}/stats    |&check;|       |&check;|       |**get** or **update** game stats for a member;</br>_fields:_ `num_attacks` `num_hits` `amount_damage` `num_kills` `instant_kills` `num_assists` `num_spells` `spells_damage`

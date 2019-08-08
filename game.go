@@ -77,7 +77,7 @@ func setGameWinners(game *Game) {
 	case calc[0].NumSpells < calc[1].NumSpells:
 		idx = 1
 	}
-	if idx == -1 { // game ended in a tie
+	if idx == -1 {						/* game ended in a tie */
 		return
 	}
 	for _, stat := range stats {
@@ -226,7 +226,7 @@ func addGameTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if teamCount == 0 {
-		db.Model(&game).Association("Teams").Append(&team)			// add first team
+		db.Model(&game).Association("Teams").Append(&team)			/* add first team */
 		game.Status = pendingGame
 		db.Save(&game)
 		responseJson(w, nil, nil, 0)
@@ -245,7 +245,7 @@ func addGameTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db.Model(&game).Association("Teams").Append(&team)				// add second team
+	db.Model(&game).Association("Teams").Append(&team)				/* add second team */
 	db.Model(&game).Association("Members").Append(&team.Members)
 	db.Model(&game).Association("Members").Append(&prevTeam.Members)
 	createEmptyStats(&game)
