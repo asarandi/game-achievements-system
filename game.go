@@ -102,15 +102,10 @@ func isMemberAchievement(array []Achievement, ach Achievement) bool {
 func setMemberAchievements(game *Game) {
 	var members []Member
 	var stats []Stat
-	db.Order("id, asc").Model(game).Association("Members").Find(&members)
-	/* join statement in case a member was deleted mid-game but the stat still exists */
-	db.Order("member_id, asc").
-		Joins("JOIN members ON members.id = stats.member_id AND stats.game_id = ?", game.ID).
-		Find(&stats)
-	if len(members) != len(stats) {		/* should not happen */
-		panic("achievements: len(members) != len(stats)")
-	}
-	for i := range members {			/* preload existing achievements for each member */
+	_ = getAllRecordsWhereABC(&stats, "game_id = ?", game.ID, nil)
+	members = make([]Member, len(stats))
+	for i := range stats {
+		members[i].ID = stats[i].MemberID
 		db.Model(&members[i]).Association("Achievements").Find(&members[i].Achievements)
 	}
 	for i := range asf {
@@ -209,10 +204,12 @@ func addGameTeam(w http.ResponseWriter, r *http.Request) {
 		db.Model(&game).Association("Teams").Find(&prevTeam)
 		db.Model(&prevTeam).Association("Members").Find(&prevTeam.Members)
 		if (len(prevTeam.Members) < gameMinNumMembers) || (len(prevTeam.Members) > gameMaxNumMembers) {
-			db.Model(&game).Association("Teams").Clear()
+			game.Teams = []Team{}
 			game.Status = newGame
 			db.Save(&game)
 			teamCount = 0
+		} else {
+			game.Teams = []Team{prevTeam}
 		}
 	}
 	if err := getRecordByID(&team, teamId); err != nil {
@@ -226,7 +223,7 @@ func addGameTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if teamCount == 0 {
-		db.Model(&game).Association("Teams").Append(&team)			/* add first team */
+		game.Teams = []Team{team}			/* add first team */
 		game.Status = pendingGame
 		db.Save(&game)
 		responseJson(w, nil, nil, 0)
@@ -245,11 +242,10 @@ func addGameTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db.Model(&game).Association("Teams").Append(&team)				/* add second team */
-	db.Model(&game).Association("Members").Append(&team.Members)
-	db.Model(&game).Association("Members").Append(&prevTeam.Members)
-	createEmptyStats(&game)
+	game.Teams = []Team{prevTeam, team}
+	game.Members = append(prevTeam.Members, team.Members...)
 	game.Status = startedGame
 	db.Save(&game)
-	getGameTeams(w, r)
+	createEmptyStats(&game)
+	responseJson(w, nil,nil, 0)
 }
