@@ -13,24 +13,9 @@ type Response struct {
 	Result  interface{} `json:"result"`
 }
 
-
-func translateError(code int, msg string) (int, string) {
-	switch {
-	case strings.Contains(msg, "UNIQUE constraint failed"):
-		msg = "record already exists"
-		code = http.StatusNotAcceptable
-	case msg == "record not found":
-		code = http.StatusNotFound
-	}
-	return code, msg
-}
-
-func jsonResponse(w http.ResponseWriter, r *Response) {
-	w.Header().Set("content-type", "application/json")
-	w.WriteHeader(r.Code)
-	_ = json.NewEncoder(w).Encode(*r)
-}
-
+/*
+	update error code based on message, update message based on code or both
+ */
 func translateResponse(r *Response) {
 	switch {
 	case strings.Contains(r.Message, "UNIQUE constraint failed"):
@@ -38,12 +23,23 @@ func translateResponse(r *Response) {
 		r.Code = http.StatusNotAcceptable
 	case r.Message == "record not found":
 		r.Code = http.StatusNotFound
+	case strings.Contains(r.Message,"cannot add team to game"):
+		r.Code = http.StatusForbidden
 	case r.Message == "cannot update stats for this game":
 		r.Code = http.StatusForbidden
+	case r.Message == "cannot change status of this game":
+		r.Code = http.StatusForbidden
+	case r.Message == "teams cannot be the same":
+		r.Code = http.StatusForbidden
+	case r.Message == "teams must have same number of players":
+		r.Code = http.StatusForbidden
+	case r.Message == "teams cannot have shared members":
+		r.Code = http.StatusForbidden
+
 	}
 }
 
-func responseDb(w http.ResponseWriter, e error, model interface{}, successCode int) {
+func responseJson(w http.ResponseWriter, e error, model interface{}, successCode int) {
 	var res Response
 	if successCode == 0 {
 		successCode = http.StatusOK

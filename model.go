@@ -42,10 +42,10 @@ type Game struct {
 }
 
 type Stat struct {
-	gorm.Model   `json:"-"`
-	GameID       uint `json:"-"`
-	TeamID       uint `json:"-"`
-	MemberID     uint `json:"-"`
+	gorm.Model
+	GameID       uint `json:"game_id"`
+	TeamID       uint `json:"team_id"`
+	MemberID     uint `json:"member_id"`
 	NumAttacks   uint `json:"num_attacks"`
 	NumHits      uint `json:"num_hits"`
 	AmountDamage uint `json:"amount_damage"`
@@ -54,7 +54,7 @@ type Stat struct {
 	NumAssists   uint `json:"num_assists"`
 	NumSpells    uint `json:"num_spells"`
 	SpellsDamage uint `json:"spells_damage"`
-	IsWinner     bool `json:"-"`
+	IsWinner     bool `json:"is_winner"`
 }
 
 var db *gorm.DB

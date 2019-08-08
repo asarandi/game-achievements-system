@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -18,12 +19,14 @@ const (
 	finishedGame
 )
 
-func setGameWinner(game *Game) {
-	teams := []Team{}
-	stats := []Stat{}
-	calc := [2]Stat{}
+func setGameWinners(game *Game) {
+	var teams []Team
+	var stats []Stat
+	var calc = [2]Stat{}
 	var idx int
-	db.Model(game).Association("Teams").Find(&teams)
+	if db.Model(game).Association("Teams").Find(&teams).Count() != 2 {
+		return
+	}
 	db.Model(game).Association("Stats").Find(&stats)
 	for _, stat := range stats {
 		idx = 0
@@ -74,7 +77,7 @@ func setGameWinner(game *Game) {
 	case calc[0].NumSpells < calc[1].NumSpells:
 		idx = 1
 	}
-	if idx == -1 { // tie
+	if idx == -1 { // game ended in a tie
 		return
 	}
 	for _, stat := range stats {
@@ -87,26 +90,40 @@ func setGameWinner(game *Game) {
 	}
 }
 
+func isMemberAchievement(array []Achievement, ach Achievement) bool {
+	for i := range array {
+		if array[i].ID == ach.ID {
+			return true
+		}
+	}
+	return false
+}
+
 func setMemberAchievements(game *Game) {
-	members := getWinnersByGameID(game.ID)
-	stats := []Stat{}
-	for i := range members {
+	var members []Member
+	var stats []Stat
+	db.Order("id, asc").Model(game).Association("Members").Find(&members)
+	/* join statement in case a member was deleted mid-game but the stat still exists */
+	db.Order("member_id, asc").
+		Joins("JOIN members ON members.id = stats.member_id AND stats.game_id = ?", game.ID).
+		Find(&stats)
+	if len(members) != len(stats) {		/* should not happen */
+		panic("achievements: len(members) != len(stats)")
+	}
+	for i := range members {			/* preload existing achievements for each member */
 		db.Model(&members[i]).Association("Achievements").Find(&members[i].Achievements)
-		stat := Stat{GameID: game.ID, MemberID: members[i].ID}
-		db.First(&stat, &stat)
-		stats = append(stats, stat)
 	}
 	for i := range asf {
-		if err := db.First(&asf[i].achievement, &Achievement{Slug: asf[i].slug}).Error; err != nil {
-			asf[i].achievement.ID = 0
+		if db.First(&asf[i].achievement, &Achievement{Slug: asf[i].slug}).Error != nil {
+			asf[i].achievement.ID = 0	/* could not find asf slug in database */
 		}
 	}
 	for i := range members {
 		for j := range asf {
 			if asf[j].achievement.ID == 0 {
 				continue
-			} // failed to preload
-			if isAwardedAlready(members[i].Achievements, asf[j].achievement) {
+			}
+			if isMemberAchievement(members[i].Achievements, asf[j].achievement) {
 				continue
 			}
 			if !asf[j].function(stats[i]) {
@@ -118,110 +135,37 @@ func setMemberAchievements(game *Game) {
 }
 
 func endGame(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	game := Game{}
-	if err := db.First(&game, vars["id0"]).Error; err != nil {
-		errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-		jsonResponse(w, &Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id0"], errorMessage), nil})
+	var game = Game{}
+	if err := getRecordByID(&game, mux.Vars(r)["id0"]); err != nil {
+		responseJson(w, err, nil, 0)
 		return
 	}
 	if game.Status != startedGame {
-		jsonResponse(w, &Response{false, http.StatusForbidden, "cannot change status of this game", nil})
+		responseJson(w, errors.New("cannot change status of this game"), nil,0)
 		return
 	}
 	game.Status = finishedGame
-	setGameWinner(&game)
+	setGameWinners(&game)
 	setMemberAchievements(&game)
-	jsonResponse(w, &Response{true, http.StatusOK, "ok", game})
-}
-
-// addGameTeam() logic:
-//      - a game can only have two teams
-//      - once a new game is created it has 0 teams and its status is `newGame`
-//      - first team to join must have between 3 and 5 members, otherwise error
-//      - after first team joins, status is changed to `pendingGame`
-//      - note: its possible that first team add/removes/updates members while status is `pendingGame`
-//              if the number of team members becomes < 3 or > 5,
-//              then team will be removed from game and game status reset to `newGame`
-//      - second team to join must have same number of members as first team, otherwise error
-//      - the two teams cannot be the same
-//      - the two teams cannot have shared members
-//      - once second team joins game status is changed to `startedGame`
-//      - empty stats are created for each team member of both teams
-
-func addGameTeam(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	game := Game{}
-	team, prevTeam := Team{}, Team{}
-
-	if err := db.First(&game, vars["id0"]).Error; err != nil { // game not found
-		errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-		jsonResponse(w, &Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id0"], errorMessage), nil})
-		return
-	}
-	if (game.Status != newGame) && (game.Status != pendingGame) {
-		s := fmt.Sprintf("cannot join game, status must be %d or %d", newGame, pendingGame)
-		jsonResponse(w, &Response{false, http.StatusForbidden, s, nil})
-		return
-	}
-
-	if db.Model(&game).Association("Teams").Count() != 0 { // load 1st team
-		db.Model(&game).Association("Teams").Find(&prevTeam)
-		db.Model(&game).Association("Members").Clear()
-		db.Model(&prevTeam).Association("Members").Find(&prevTeam.Members)
-		db.Model(&game).Association("Members").Append(&prevTeam.Members) // reload game members
-		db.Save(&game)
-	}
-
-	if len(prevTeam.Members) < gameMinNumMembers || len(prevTeam.Members) > gameMaxNumMembers {
-		db.Model(&game).Association("Members").Clear()
-		db.Model(&game).Association("Teams").Clear()
-		game.Status = newGame
-		db.Save(&game)
-	}
-
-	if err := db.First(&team, vars["id1"]).Error; err != nil {
-		errorCode, errorMessage := translateError(http.StatusInternalServerError, err.Error())
-		jsonResponse(w, &Response{false, errorCode, fmt.Sprintf("%s: %s", vars["id1"], errorMessage), nil})
-		return
-	}
-
-	db.Model(&team).Association("Members").Find(&team.Members)
-	if len(team.Members) < gameMinNumMembers || len(team.Members) > gameMaxNumMembers {
-		s := fmt.Sprintf("team must contain between %d and %d members", gameMinNumMembers, gameMaxNumMembers)
-		jsonResponse(w, &Response{false, http.StatusForbidden, s, nil})
-		return
-	}
-
-	if db.Model(&game).Association("Teams").Count() == 0 { // this team is first team
-		db.Model(&game).Association("Teams").Append(&team)
-		db.Model(&game).Association("Members").Append(&team.Members)
-		game.Status = pendingGame
-		db.Save(&game)
-		getGameTeams(w, r)
-		return
-	}
-
-	if prevTeam.ID == team.ID {
-		jsonResponse(w, &Response{false, http.StatusForbidden, "teams cannot be the same", nil})
-		return
-	}
-	if len(prevTeam.Members) != len(team.Members) {
-		jsonResponse(w, &Response{false, http.StatusForbidden, "teams must have same number of players", nil})
-		return
-	}
-	if isSharedMembers(prevTeam.Members, team.Members) {
-		jsonResponse(w, &Response{false, http.StatusForbidden, "teams cannot have shared members", nil})
-		return
-	}
-	db.Model(&game).Association("Teams").Append(&team) // add 2nd team to game
-	db.Model(&game).Association("Members").Append(&team.Members)
-	game.Status = startedGame
-	createEmptyStats(&game, &team, &team.Members)
-	createEmptyStats(&game, &prevTeam, &prevTeam.Members)
 	db.Save(&game)
-	getGameTeams(w, r)
+	responseJson(w, nil, nil,0)
 }
+
+/*
+	addGameTeam() logic:
+     - a game can only have two teams
+     - once a new game is created it has 0 teams and its status is `newGame`
+     - first team to join must have between 3 and 5 members, otherwise error
+     - after first team joins, status is changed to `pendingGame`
+     - note: its possible that first team add/removes members while status is `pendingGame`
+             if the number of team members becomes < 3 or > 5,
+             then team will be removed from game and game status reset to `newGame`
+     - second team to join must have same number of members as first team, otherwise error
+     - the two teams cannot be the same
+     - the two teams cannot have shared members
+     - once second team joins game status is changed to `startedGame`
+     - empty stats are created for each team member of both teams
+*/
 
 func isSharedMembers(teamA, teamB []Member) bool {
 	for i := range teamA {
@@ -234,17 +178,78 @@ func isSharedMembers(teamA, teamB []Member) bool {
 	return false
 }
 
-func createEmptyStats(game *Game, team *Team, members *[]Member) {
-	for _, member := range *members {
-		db.Create(&Stat{GameID: game.ID, TeamID: team.ID, MemberID: member.ID})
+func createEmptyStats(game *Game) {
+	for i := range game.Teams {
+		for j := range game.Teams[i].Members {
+			db.Create(&Stat{
+				GameID: game.ID,
+				TeamID: game.Teams[i].ID,
+				MemberID: game.Teams[i].Members[j].ID})
+		}
 	}
 }
 
-func isAwardedAlready(array []Achievement, ach Achievement) bool {
-	for i := range array {
-		if array[i].ID == ach.ID {
-			return true
+func addGameTeam(w http.ResponseWriter, r *http.Request) {
+	var gameId, teamId =  mux.Vars(r)["id0"], mux.Vars(r)["id1"]
+	var game = Game{}
+	var team, prevTeam = Team{}, Team{}
+	var teamCount = 0
+
+	if err := getRecordByID(&game, gameId); err != nil {
+		responseJson(w, err, nil, 0)
+		return
+	}
+	if (game.Status != newGame) && (game.Status != pendingGame) {
+		s := fmt.Sprintf("cannot add team to game, status must be %d or %d", newGame, pendingGame)
+		responseJson(w, errors.New(s), nil, 0)
+		return
+	}
+	teamCount = db.Model(&game).Association("Teams").Count()
+	if teamCount > 0 { // load 1st team
+		db.Model(&game).Association("Teams").Find(&prevTeam)
+		db.Model(&prevTeam).Association("Members").Find(&prevTeam.Members)
+		if (len(prevTeam.Members) < gameMinNumMembers) || (len(prevTeam.Members) > gameMaxNumMembers) {
+			db.Model(&game).Association("Teams").Clear()
+			game.Status = newGame
+			db.Save(&game)
+			teamCount = 0
 		}
 	}
-	return false
+	if err := getRecordByID(&team, teamId); err != nil {
+		responseJson(w, err, nil, 0)
+		return
+	}
+	db.Model(&team).Association("Members").Find(&team.Members)
+	if len(team.Members) < gameMinNumMembers || len(team.Members) > gameMaxNumMembers {
+		s := fmt.Sprintf("team must contain between %d and %d members", gameMinNumMembers, gameMaxNumMembers)
+		responseJson(w, errors.New(s), nil, 0)
+		return
+	}
+	if teamCount == 0 {
+		db.Model(&game).Association("Teams").Append(&team)			// add first team
+		game.Status = pendingGame
+		db.Save(&game)
+		responseJson(w, nil, nil, 0)
+		return
+	}
+	if prevTeam.ID == team.ID {
+		responseJson(w, errors.New("teams cannot be the same"),nil, 0)
+		return
+	}
+	if len(prevTeam.Members) != len(team.Members) {
+		responseJson(w, errors.New("teams must have same number of players"),nil, 0)
+		return
+	}
+	if isSharedMembers(prevTeam.Members, team.Members) {
+		responseJson(w, errors.New("teams cannot have shared members"),nil, 0)
+		return
+	}
+
+	db.Model(&game).Association("Teams").Append(&team)				// add second team
+	db.Model(&game).Association("Members").Append(&team.Members)
+	db.Model(&game).Association("Members").Append(&prevTeam.Members)
+	createEmptyStats(&game)
+	game.Status = startedGame
+	db.Save(&game)
+	getGameTeams(w, r)
 }
