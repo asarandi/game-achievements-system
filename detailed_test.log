@@ -1,0 +1,1936 @@
+=== RUN   TestInsertMembers
+EXPECTED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"name": "Mario",
+		"img": "https://upload.wikimedia.org/wikipedia/en/a/a9/MarioNSMBUDeluxe.png"
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 1,
+		"CreatedAt": "2019-08-09T11:02:03.263265-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.263265-07:00",
+		"DeletedAt": null,
+		"name": "Mario",
+		"img": "https://upload.wikimedia.org/wikipedia/en/a/a9/MarioNSMBUDeluxe.png"
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"name": "Luigi",
+		"img": "https://upload.wikimedia.org/wikipedia/en/f/f1/LuigiNSMBW.png"
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 2,
+		"CreatedAt": "2019-08-09T11:02:03.263684-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.263684-07:00",
+		"DeletedAt": null,
+		"name": "Luigi",
+		"img": "https://upload.wikimedia.org/wikipedia/en/f/f1/LuigiNSMBW.png"
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"name": "Princess Peach",
+		"img": "https://upload.wikimedia.org/wikipedia/en/d/d5/Peach_%28Super_Mario_3D_World%29.png"
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 3,
+		"CreatedAt": "2019-08-09T11:02:03.264164-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.264164-07:00",
+		"DeletedAt": null,
+		"name": "Princess Peach",
+		"img": "https://upload.wikimedia.org/wikipedia/en/d/d5/Peach_%28Super_Mario_3D_World%29.png"
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"name": "Toad",
+		"img": "https://upload.wikimedia.org/wikipedia/en/d/d1/Toad_3D_Land.png"
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 4,
+		"CreatedAt": "2019-08-09T11:02:03.264461-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.264461-07:00",
+		"DeletedAt": null,
+		"name": "Toad",
+		"img": "https://upload.wikimedia.org/wikipedia/en/d/d1/Toad_3D_Land.png"
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"name": "Yoshi",
+		"img": "https://upload.wikimedia.org/wikipedia/en/d/d9/YoshiMarioParty10.png"
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 5,
+		"CreatedAt": "2019-08-09T11:02:03.264738-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.264738-07:00",
+		"DeletedAt": null,
+		"name": "Yoshi",
+		"img": "https://upload.wikimedia.org/wikipedia/en/d/d9/YoshiMarioParty10.png"
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"name": "Bowser",
+		"img": "https://upload.wikimedia.org/wikipedia/en/1/11/BowserNSMBUD.png"
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 6,
+		"CreatedAt": "2019-08-09T11:02:03.265016-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.265016-07:00",
+		"DeletedAt": null,
+		"name": "Bowser",
+		"img": "https://upload.wikimedia.org/wikipedia/en/1/11/BowserNSMBUD.png"
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"name": "Bowser Jr.",
+		"img": "https://upload.wikimedia.org/wikipedia/en/d/d2/Bowser_Jr.png"
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 7,
+		"CreatedAt": "2019-08-09T11:02:03.265345-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.265345-07:00",
+		"DeletedAt": null,
+		"name": "Bowser Jr.",
+		"img": "https://upload.wikimedia.org/wikipedia/en/d/d2/Bowser_Jr.png"
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"name": "Princess Daisy",
+		"img": "https://upload.wikimedia.org/wikipedia/en/b/bd/Daisy_%28Super_Mario_Party%29.png"
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 8,
+		"CreatedAt": "2019-08-09T11:02:03.265589-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.265589-07:00",
+		"DeletedAt": null,
+		"name": "Princess Daisy",
+		"img": "https://upload.wikimedia.org/wikipedia/en/b/bd/Daisy_%28Super_Mario_Party%29.png"
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"name": "Wario",
+		"img": "https://upload.wikimedia.org/wikipedia/en/8/81/Wario.png"
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 9,
+		"CreatedAt": "2019-08-09T11:02:03.265823-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.265823-07:00",
+		"DeletedAt": null,
+		"name": "Wario",
+		"img": "https://upload.wikimedia.org/wikipedia/en/8/81/Wario.png"
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"name": "Waluigi",
+		"img": "https://upload.wikimedia.org/wikipedia/en/4/46/Waluigi.png"
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 10,
+		"CreatedAt": "2019-08-09T11:02:03.266055-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.266055-07:00",
+		"DeletedAt": null,
+		"name": "Waluigi",
+		"img": "https://upload.wikimedia.org/wikipedia/en/4/46/Waluigi.png"
+	}
+}
+
+--- PASS: TestInsertMembers (0.00s)
+=== RUN   TestInsertTeams
+EXPECTED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"name": "The Sluggers Team",
+		"img": "https://upload.wikimedia.org/wikipedia/en/0/0c/MarioSuperSluggers.png"
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 1,
+		"CreatedAt": "2019-08-09T11:02:03.266519-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.266519-07:00",
+		"DeletedAt": null,
+		"name": "The Sluggers Team",
+		"img": "https://upload.wikimedia.org/wikipedia/en/0/0c/MarioSuperSluggers.png"
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"name": "Strikers Group Inc",
+		"img": "https://upload.wikimedia.org/wikipedia/en/5/50/Mario_Strikers_Charged.jpg"
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 2,
+		"CreatedAt": "2019-08-09T11:02:03.266766-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.266766-07:00",
+		"DeletedAt": null,
+		"name": "Strikers Group Inc",
+		"img": "https://upload.wikimedia.org/wikipedia/en/5/50/Mario_Strikers_Charged.jpg"
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"name": "Superstar Alliance Corp",
+		"img": "https://upload.wikimedia.org/wikipedia/en/2/2f/Mario_Superstar_Baseball.jpg"
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 3,
+		"CreatedAt": "2019-08-09T11:02:03.266998-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.266998-07:00",
+		"DeletedAt": null,
+		"name": "Superstar Alliance Corp",
+		"img": "https://upload.wikimedia.org/wikipedia/en/2/2f/Mario_Superstar_Baseball.jpg"
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"name": "Advanced Tourists Ltd",
+		"img": "https://upload.wikimedia.org/wikipedia/en/0/0d/Advance_Tour_Cover.jpg"
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 4,
+		"CreatedAt": "2019-08-09T11:02:03.267218-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.267218-07:00",
+		"DeletedAt": null,
+		"name": "Advanced Tourists Ltd",
+		"img": "https://upload.wikimedia.org/wikipedia/en/0/0d/Advance_Tour_Cover.jpg"
+	}
+}
+
+--- PASS: TestInsertTeams (0.00s)
+=== RUN   TestInsertAchievements
+EXPECTED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"slug": "sharpshooter",
+		"name": "“Sharpshooter” Award",
+		"desc": "Land at least 75% of all your attacks, assuming you attacked at least once.",
+		"img": "http://images.clipartpanda.com/sharpshooter-clipart-gg58876635.jpg"
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 1,
+		"CreatedAt": "2019-08-09T11:02:03.267528-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.267528-07:00",
+		"DeletedAt": null,
+		"slug": "sharpshooter",
+		"name": "“Sharpshooter” Award",
+		"desc": "Land at least 75% of all your attacks, assuming you attacked at least once.",
+		"img": "http://images.clipartpanda.com/sharpshooter-clipart-gg58876635.jpg"
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"slug": "bruiser",
+		"name": "“Bruiser” Award",
+		"desc": "Do more than 500 points of damage during one game.",
+		"img": "https://i1.wp.com/azwildlife.org/wp-content/uploads/2018/07/trophy.png"
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 2,
+		"CreatedAt": "2019-08-09T11:02:03.26778-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.26778-07:00",
+		"DeletedAt": null,
+		"slug": "bruiser",
+		"name": "“Bruiser” Award",
+		"desc": "Do more than 500 points of damage during one game.",
+		"img": "https://i1.wp.com/azwildlife.org/wp-content/uploads/2018/07/trophy.png"
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"slug": "veteran",
+		"name": "“Veteran” Award",
+		"desc": "Play more than 1000 games.",
+		"img": "http://icons.iconarchive.com/icons/google/noto-emoji-activities/1024/52725-trophy-icon.png"
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 3,
+		"CreatedAt": "2019-08-09T11:02:03.268008-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.268008-07:00",
+		"DeletedAt": null,
+		"slug": "veteran",
+		"name": "“Veteran” Award",
+		"desc": "Play more than 1000 games.",
+		"img": "http://icons.iconarchive.com/icons/google/noto-emoji-activities/1024/52725-trophy-icon.png"
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"slug": "bigwinner",
+		"name": "“Big Winner” Award",
+		"desc": "Have over 200 wins.",
+		"img": "https://png.pngtree.com/element_origin_min_pic/17/09/21/91633641bc0263293bce7cab1593e41c.jpg"
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 4,
+		"CreatedAt": "2019-08-09T11:02:03.268228-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.268228-07:00",
+		"DeletedAt": null,
+		"slug": "bigwinner",
+		"name": "“Big Winner” Award",
+		"desc": "Have over 200 wins.",
+		"img": "https://png.pngtree.com/element_origin_min_pic/17/09/21/91633641bc0263293bce7cab1593e41c.jpg"
+	}
+}
+
+--- PASS: TestInsertAchievements (0.00s)
+=== RUN   TestMembersJoinTeams
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+
+--- PASS: TestMembersJoinTeams (0.00s)
+=== RUN   TestCreateGames
+EXPECTED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"status": 1
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 1,
+		"CreatedAt": "2019-08-09T11:02:03.27335-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.27335-07:00",
+		"DeletedAt": null,
+		"status": 1
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"status": 1
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 201,
+	"message": "ok",
+	"result": {
+		"ID": 2,
+		"CreatedAt": "2019-08-09T11:02:03.27356-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.27356-07:00",
+		"DeletedAt": null,
+		"status": 1
+	}
+}
+
+--- PASS: TestCreateGames (0.00s)
+=== RUN   TestTeamsJoinGames
+EXPECTED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": null
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": null
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": null
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": null
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": null
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": null
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": null
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": null
+}
+
+--- PASS: TestTeamsJoinGames (0.01s)
+=== RUN   TestUpdateGameMemberStats
+EXPECTED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"game_id": 0,
+		"team_id": 0,
+		"member_id": 0,
+		"num_attacks": 12,
+		"num_hits": 1,
+		"amount_damage": 13,
+		"num_kills": 14,
+		"instant_kills": 15,
+		"num_assists": 16,
+		"num_spells": 17,
+		"spells_damage": 18,
+		"is_winner": false
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 1,
+		"CreatedAt": "2019-08-09T11:02:03.278913-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.284629-07:00",
+		"DeletedAt": null,
+		"game_id": 1,
+		"team_id": 1,
+		"member_id": 1,
+		"num_attacks": 12,
+		"num_hits": 1,
+		"amount_damage": 13,
+		"num_kills": 14,
+		"instant_kills": 15,
+		"num_assists": 16,
+		"num_spells": 17,
+		"spells_damage": 18,
+		"is_winner": false
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"game_id": 0,
+		"team_id": 0,
+		"member_id": 0,
+		"num_attacks": 22,
+		"num_hits": 99999,
+		"amount_damage": 23,
+		"num_kills": 24,
+		"instant_kills": 25,
+		"num_assists": 26,
+		"num_spells": 27,
+		"spells_damage": 28,
+		"is_winner": false
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 2,
+		"CreatedAt": "2019-08-09T11:02:03.279039-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.285149-07:00",
+		"DeletedAt": null,
+		"game_id": 1,
+		"team_id": 1,
+		"member_id": 2,
+		"num_attacks": 22,
+		"num_hits": 99999,
+		"amount_damage": 23,
+		"num_kills": 24,
+		"instant_kills": 25,
+		"num_assists": 26,
+		"num_spells": 27,
+		"spells_damage": 28,
+		"is_winner": false
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"game_id": 0,
+		"team_id": 0,
+		"member_id": 0,
+		"num_attacks": 32,
+		"num_hits": 3,
+		"amount_damage": 33,
+		"num_kills": 34,
+		"instant_kills": 35,
+		"num_assists": 36,
+		"num_spells": 37,
+		"spells_damage": 38,
+		"is_winner": false
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 3,
+		"CreatedAt": "2019-08-09T11:02:03.279136-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.285631-07:00",
+		"DeletedAt": null,
+		"game_id": 1,
+		"team_id": 1,
+		"member_id": 3,
+		"num_attacks": 32,
+		"num_hits": 3,
+		"amount_damage": 33,
+		"num_kills": 34,
+		"instant_kills": 35,
+		"num_assists": 36,
+		"num_spells": 37,
+		"spells_damage": 38,
+		"is_winner": false
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"game_id": 0,
+		"team_id": 0,
+		"member_id": 0,
+		"num_attacks": 42,
+		"num_hits": 4,
+		"amount_damage": 43,
+		"num_kills": 44,
+		"instant_kills": 45,
+		"num_assists": 46,
+		"num_spells": 47,
+		"spells_damage": 48,
+		"is_winner": false
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 4,
+		"CreatedAt": "2019-08-09T11:02:03.279227-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.286097-07:00",
+		"DeletedAt": null,
+		"game_id": 1,
+		"team_id": 1,
+		"member_id": 4,
+		"num_attacks": 42,
+		"num_hits": 4,
+		"amount_damage": 43,
+		"num_kills": 44,
+		"instant_kills": 45,
+		"num_assists": 46,
+		"num_spells": 47,
+		"spells_damage": 48,
+		"is_winner": false
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"game_id": 0,
+		"team_id": 0,
+		"member_id": 0,
+		"num_attacks": 52,
+		"num_hits": 5,
+		"amount_damage": 53,
+		"num_kills": 54,
+		"instant_kills": 55,
+		"num_assists": 56,
+		"num_spells": 57,
+		"spells_damage": 58,
+		"is_winner": false
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 5,
+		"CreatedAt": "2019-08-09T11:02:03.279317-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.286567-07:00",
+		"DeletedAt": null,
+		"game_id": 1,
+		"team_id": 2,
+		"member_id": 5,
+		"num_attacks": 52,
+		"num_hits": 5,
+		"amount_damage": 53,
+		"num_kills": 54,
+		"instant_kills": 55,
+		"num_assists": 56,
+		"num_spells": 57,
+		"spells_damage": 58,
+		"is_winner": false
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"game_id": 0,
+		"team_id": 0,
+		"member_id": 0,
+		"num_attacks": 62,
+		"num_hits": 6,
+		"amount_damage": 63,
+		"num_kills": 64,
+		"instant_kills": 65,
+		"num_assists": 66,
+		"num_spells": 67,
+		"spells_damage": 68,
+		"is_winner": false
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 6,
+		"CreatedAt": "2019-08-09T11:02:03.279417-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.287069-07:00",
+		"DeletedAt": null,
+		"game_id": 1,
+		"team_id": 2,
+		"member_id": 6,
+		"num_attacks": 62,
+		"num_hits": 6,
+		"amount_damage": 63,
+		"num_kills": 64,
+		"instant_kills": 65,
+		"num_assists": 66,
+		"num_spells": 67,
+		"spells_damage": 68,
+		"is_winner": false
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"game_id": 0,
+		"team_id": 0,
+		"member_id": 0,
+		"num_attacks": 72,
+		"num_hits": 7,
+		"amount_damage": 73,
+		"num_kills": 74,
+		"instant_kills": 75,
+		"num_assists": 76,
+		"num_spells": 77,
+		"spells_damage": 78,
+		"is_winner": false
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 7,
+		"CreatedAt": "2019-08-09T11:02:03.279534-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.287478-07:00",
+		"DeletedAt": null,
+		"game_id": 1,
+		"team_id": 2,
+		"member_id": 7,
+		"num_attacks": 72,
+		"num_hits": 7,
+		"amount_damage": 73,
+		"num_kills": 74,
+		"instant_kills": 75,
+		"num_assists": 76,
+		"num_spells": 77,
+		"spells_damage": 78,
+		"is_winner": false
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"game_id": 0,
+		"team_id": 0,
+		"member_id": 0,
+		"num_attacks": 82,
+		"num_hits": 8,
+		"amount_damage": 83,
+		"num_kills": 84,
+		"instant_kills": 85,
+		"num_assists": 86,
+		"num_spells": 87,
+		"spells_damage": 88,
+		"is_winner": false
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 8,
+		"CreatedAt": "2019-08-09T11:02:03.279666-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.287888-07:00",
+		"DeletedAt": null,
+		"game_id": 1,
+		"team_id": 2,
+		"member_id": 8,
+		"num_attacks": 82,
+		"num_hits": 8,
+		"amount_damage": 83,
+		"num_kills": 84,
+		"instant_kills": 85,
+		"num_assists": 86,
+		"num_spells": 87,
+		"spells_damage": 88,
+		"is_winner": false
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"game_id": 0,
+		"team_id": 0,
+		"member_id": 0,
+		"num_attacks": 92,
+		"num_hits": 9,
+		"amount_damage": 93,
+		"num_kills": 94,
+		"instant_kills": 95,
+		"num_assists": 96,
+		"num_spells": 97,
+		"spells_damage": 98,
+		"is_winner": false
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 9,
+		"CreatedAt": "2019-08-09T11:02:03.283399-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.288311-07:00",
+		"DeletedAt": null,
+		"game_id": 2,
+		"team_id": 3,
+		"member_id": 1,
+		"num_attacks": 92,
+		"num_hits": 9,
+		"amount_damage": 93,
+		"num_kills": 94,
+		"instant_kills": 95,
+		"num_assists": 96,
+		"num_spells": 97,
+		"spells_damage": 98,
+		"is_winner": false
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"game_id": 0,
+		"team_id": 0,
+		"member_id": 0,
+		"num_attacks": 102,
+		"num_hits": 10,
+		"amount_damage": 103,
+		"num_kills": 104,
+		"instant_kills": 105,
+		"num_assists": 106,
+		"num_spells": 107,
+		"spells_damage": 108,
+		"is_winner": false
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 10,
+		"CreatedAt": "2019-08-09T11:02:03.283527-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.288709-07:00",
+		"DeletedAt": null,
+		"game_id": 2,
+		"team_id": 3,
+		"member_id": 2,
+		"num_attacks": 102,
+		"num_hits": 10,
+		"amount_damage": 103,
+		"num_kills": 104,
+		"instant_kills": 105,
+		"num_assists": 106,
+		"num_spells": 107,
+		"spells_damage": 108,
+		"is_winner": false
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"game_id": 0,
+		"team_id": 0,
+		"member_id": 0,
+		"num_attacks": 112,
+		"num_hits": 11,
+		"amount_damage": 99999,
+		"num_kills": 114,
+		"instant_kills": 115,
+		"num_assists": 116,
+		"num_spells": 117,
+		"spells_damage": 118,
+		"is_winner": false
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 11,
+		"CreatedAt": "2019-08-09T11:02:03.283623-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.289105-07:00",
+		"DeletedAt": null,
+		"game_id": 2,
+		"team_id": 3,
+		"member_id": 3,
+		"num_attacks": 112,
+		"num_hits": 11,
+		"amount_damage": 99999,
+		"num_kills": 114,
+		"instant_kills": 115,
+		"num_assists": 116,
+		"num_spells": 117,
+		"spells_damage": 118,
+		"is_winner": false
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"game_id": 0,
+		"team_id": 0,
+		"member_id": 0,
+		"num_attacks": 122,
+		"num_hits": 12,
+		"amount_damage": 123,
+		"num_kills": 124,
+		"instant_kills": 125,
+		"num_assists": 126,
+		"num_spells": 127,
+		"spells_damage": 128,
+		"is_winner": false
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 12,
+		"CreatedAt": "2019-08-09T11:02:03.283749-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.289511-07:00",
+		"DeletedAt": null,
+		"game_id": 2,
+		"team_id": 4,
+		"member_id": 5,
+		"num_attacks": 122,
+		"num_hits": 12,
+		"amount_damage": 123,
+		"num_kills": 124,
+		"instant_kills": 125,
+		"num_assists": 126,
+		"num_spells": 127,
+		"spells_damage": 128,
+		"is_winner": false
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"game_id": 0,
+		"team_id": 0,
+		"member_id": 0,
+		"num_attacks": 132,
+		"num_hits": 13,
+		"amount_damage": 133,
+		"num_kills": 134,
+		"instant_kills": 135,
+		"num_assists": 136,
+		"num_spells": 137,
+		"spells_damage": 138,
+		"is_winner": false
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 13,
+		"CreatedAt": "2019-08-09T11:02:03.283846-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.289904-07:00",
+		"DeletedAt": null,
+		"game_id": 2,
+		"team_id": 4,
+		"member_id": 6,
+		"num_attacks": 132,
+		"num_hits": 13,
+		"amount_damage": 133,
+		"num_kills": 134,
+		"instant_kills": 135,
+		"num_assists": 136,
+		"num_spells": 137,
+		"spells_damage": 138,
+		"is_winner": false
+	}
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 0,
+		"CreatedAt": "0001-01-01T00:00:00Z",
+		"UpdatedAt": "0001-01-01T00:00:00Z",
+		"DeletedAt": null,
+		"game_id": 0,
+		"team_id": 0,
+		"member_id": 0,
+		"num_attacks": 142,
+		"num_hits": 14,
+		"amount_damage": 143,
+		"num_kills": 144,
+		"instant_kills": 145,
+		"num_assists": 146,
+		"num_spells": 147,
+		"spells_damage": 148,
+		"is_winner": false
+	}
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 202,
+	"message": "ok",
+	"result": {
+		"ID": 14,
+		"CreatedAt": "2019-08-09T11:02:03.283942-07:00",
+		"UpdatedAt": "2019-08-09T11:02:03.29031-07:00",
+		"DeletedAt": null,
+		"game_id": 2,
+		"team_id": 4,
+		"member_id": 7,
+		"num_attacks": 142,
+		"num_hits": 14,
+		"amount_damage": 143,
+		"num_kills": 144,
+		"instant_kills": 145,
+		"num_assists": 146,
+		"num_spells": 147,
+		"spells_damage": 148,
+		"is_winner": false
+	}
+}
+
+--- PASS: TestUpdateGameMemberStats (0.01s)
+=== RUN   TestGetAchievementMembersBefore
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": []
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": []
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": []
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": []
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": []
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": []
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": []
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": []
+}
+
+--- PASS: TestGetAchievementMembersBefore (0.00s)
+=== RUN   TestGetGameWinnersBefore
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": []
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": []
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": []
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": []
+}
+
+--- PASS: TestGetGameWinnersBefore (0.00s)
+=== RUN   TestCloseGame
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": null
+}
+
+--- PASS: TestCloseGame (0.01s)
+=== RUN   TestGetAchievementMembersAfter
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": [
+		{
+			"ID": 0,
+			"CreatedAt": "0001-01-01T00:00:00Z",
+			"UpdatedAt": "0001-01-01T00:00:00Z",
+			"DeletedAt": null,
+			"name": "Luigi",
+			"img": "https://upload.wikimedia.org/wikipedia/en/f/f1/LuigiNSMBW.png"
+		}
+	]
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": [
+		{
+			"ID": 2,
+			"CreatedAt": "2019-08-09T11:02:03.263684-07:00",
+			"UpdatedAt": "2019-08-09T11:02:03.282745-07:00",
+			"DeletedAt": null,
+			"name": "Luigi",
+			"img": "https://upload.wikimedia.org/wikipedia/en/f/f1/LuigiNSMBW.png"
+		}
+	]
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": [
+		{
+			"ID": 0,
+			"CreatedAt": "0001-01-01T00:00:00Z",
+			"UpdatedAt": "0001-01-01T00:00:00Z",
+			"DeletedAt": null,
+			"name": "Princess Peach",
+			"img": "https://upload.wikimedia.org/wikipedia/en/d/d5/Peach_%28Super_Mario_3D_World%29.png"
+		}
+	]
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": [
+		{
+			"ID": 3,
+			"CreatedAt": "2019-08-09T11:02:03.264164-07:00",
+			"UpdatedAt": "2019-08-09T11:02:03.282846-07:00",
+			"DeletedAt": null,
+			"name": "Princess Peach",
+			"img": "https://upload.wikimedia.org/wikipedia/en/d/d5/Peach_%28Super_Mario_3D_World%29.png"
+		}
+	]
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": []
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": []
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": []
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": []
+}
+
+--- PASS: TestGetAchievementMembersAfter (0.00s)
+=== RUN   TestGetGameWinnersAfter
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": [
+		{
+			"ID": 0,
+			"CreatedAt": "0001-01-01T00:00:00Z",
+			"UpdatedAt": "0001-01-01T00:00:00Z",
+			"DeletedAt": null,
+			"name": "Yoshi",
+			"img": "https://upload.wikimedia.org/wikipedia/en/d/d9/YoshiMarioParty10.png"
+		},
+		{
+			"ID": 0,
+			"CreatedAt": "0001-01-01T00:00:00Z",
+			"UpdatedAt": "0001-01-01T00:00:00Z",
+			"DeletedAt": null,
+			"name": "Bowser",
+			"img": "https://upload.wikimedia.org/wikipedia/en/1/11/BowserNSMBUD.png"
+		},
+		{
+			"ID": 0,
+			"CreatedAt": "0001-01-01T00:00:00Z",
+			"UpdatedAt": "0001-01-01T00:00:00Z",
+			"DeletedAt": null,
+			"name": "Bowser Jr.",
+			"img": "https://upload.wikimedia.org/wikipedia/en/d/d2/Bowser_Jr.png"
+		},
+		{
+			"ID": 0,
+			"CreatedAt": "0001-01-01T00:00:00Z",
+			"UpdatedAt": "0001-01-01T00:00:00Z",
+			"DeletedAt": null,
+			"name": "Princess Daisy",
+			"img": "https://upload.wikimedia.org/wikipedia/en/b/bd/Daisy_%28Super_Mario_Party%29.png"
+		}
+	]
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": [
+		{
+			"ID": 5,
+			"CreatedAt": "2019-08-09T11:02:03.264738-07:00",
+			"UpdatedAt": "2019-08-09T11:02:03.282958-07:00",
+			"DeletedAt": null,
+			"name": "Yoshi",
+			"img": "https://upload.wikimedia.org/wikipedia/en/d/d9/YoshiMarioParty10.png"
+		},
+		{
+			"ID": 6,
+			"CreatedAt": "2019-08-09T11:02:03.265016-07:00",
+			"UpdatedAt": "2019-08-09T11:02:03.283073-07:00",
+			"DeletedAt": null,
+			"name": "Bowser",
+			"img": "https://upload.wikimedia.org/wikipedia/en/1/11/BowserNSMBUD.png"
+		},
+		{
+			"ID": 7,
+			"CreatedAt": "2019-08-09T11:02:03.265345-07:00",
+			"UpdatedAt": "2019-08-09T11:02:03.283189-07:00",
+			"DeletedAt": null,
+			"name": "Bowser Jr.",
+			"img": "https://upload.wikimedia.org/wikipedia/en/d/d2/Bowser_Jr.png"
+		},
+		{
+			"ID": 8,
+			"CreatedAt": "2019-08-09T11:02:03.265589-07:00",
+			"UpdatedAt": "2019-08-09T11:02:03.278774-07:00",
+			"DeletedAt": null,
+			"name": "Princess Daisy",
+			"img": "https://upload.wikimedia.org/wikipedia/en/b/bd/Daisy_%28Super_Mario_Party%29.png"
+		}
+	]
+}
+
+EXPECTED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": [
+		{
+			"ID": 0,
+			"CreatedAt": "0001-01-01T00:00:00Z",
+			"UpdatedAt": "0001-01-01T00:00:00Z",
+			"DeletedAt": null,
+			"name": "Yoshi",
+			"img": "https://upload.wikimedia.org/wikipedia/en/d/d9/YoshiMarioParty10.png"
+		},
+		{
+			"ID": 0,
+			"CreatedAt": "0001-01-01T00:00:00Z",
+			"UpdatedAt": "0001-01-01T00:00:00Z",
+			"DeletedAt": null,
+			"name": "Bowser",
+			"img": "https://upload.wikimedia.org/wikipedia/en/1/11/BowserNSMBUD.png"
+		},
+		{
+			"ID": 0,
+			"CreatedAt": "0001-01-01T00:00:00Z",
+			"UpdatedAt": "0001-01-01T00:00:00Z",
+			"DeletedAt": null,
+			"name": "Bowser Jr.",
+			"img": "https://upload.wikimedia.org/wikipedia/en/d/d2/Bowser_Jr.png"
+		}
+	]
+}
+RECEIVED
+ {
+	"success": true,
+	"code": 200,
+	"message": "ok",
+	"result": [
+		{
+			"ID": 5,
+			"CreatedAt": "2019-08-09T11:02:03.264738-07:00",
+			"UpdatedAt": "2019-08-09T11:02:03.282958-07:00",
+			"DeletedAt": null,
+			"name": "Yoshi",
+			"img": "https://upload.wikimedia.org/wikipedia/en/d/d9/YoshiMarioParty10.png"
+		},
+		{
+			"ID": 6,
+			"CreatedAt": "2019-08-09T11:02:03.265016-07:00",
+			"UpdatedAt": "2019-08-09T11:02:03.283073-07:00",
+			"DeletedAt": null,
+			"name": "Bowser",
+			"img": "https://upload.wikimedia.org/wikipedia/en/1/11/BowserNSMBUD.png"
+		},
+		{
+			"ID": 7,
+			"CreatedAt": "2019-08-09T11:02:03.265345-07:00",
+			"UpdatedAt": "2019-08-09T11:02:03.283189-07:00",
+			"DeletedAt": null,
+			"name": "Bowser Jr.",
+			"img": "https://upload.wikimedia.org/wikipedia/en/d/d2/Bowser_Jr.png"
+		}
+	]
+}
+
+--- PASS: TestGetGameWinnersAfter (0.00s)
+PASS
+ok  	_/nfs/2016/a/asarandi/Desktop/game-achievements-system	0.060s
