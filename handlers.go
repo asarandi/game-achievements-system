@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/gorilla/mux"
 	"net/http"
 )
@@ -20,7 +19,7 @@ func updateGameMemberStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if game.Status != startedGame {
-		responseJson(w, errors.New("cannot update stats for this game"), nil, 0)
+		responseJson(w, errorWrongGameStatus, nil, 0)
 		return
 	}
 	if err := json.NewDecoder(r.Body).Decode(&newRecord); err != nil {

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"errors"
-	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
 )
@@ -90,9 +88,9 @@ func setGameWinners(game *Game) {
 	}
 }
 
-func isMemberAchievement(array []Achievement, ach Achievement) bool {
+func isMemberAchievement(array []Achievement, item Achievement) bool {
 	for i := range array {
-		if array[i].ID == ach.ID {
+		if array[i].ID == item.ID {
 			return true
 		}
 	}
@@ -136,14 +134,14 @@ func endGame(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if game.Status != startedGame {
-		responseJson(w, errors.New("cannot change status of this game"), nil,0)
+		responseJson(w, errorGameNotStarted, nil, 0)
 		return
 	}
 	game.Status = finishedGame
 	setGameWinners(&game)
 	setMemberAchievements(&game)
 	db.Save(&game)
-	responseJson(w, nil, nil,0)
+	responseJson(w, nil, nil, http.StatusOK)
 }
 
 /*
@@ -195,8 +193,7 @@ func addGameTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if (game.Status != newGame) && (game.Status != pendingGame) {
-		s := fmt.Sprintf("cannot add team to game, status must be %d or %d", newGame, pendingGame)
-		responseJson(w, errors.New(s), nil, 0)
+		responseJson(w, errorCannotAddTeam, nil, 0)
 		return
 	}
 	teamCount = db.Model(&game).Association("Teams").Count()
@@ -218,27 +215,26 @@ func addGameTeam(w http.ResponseWriter, r *http.Request) {
 	}
 	db.Model(&team).Association("Members").Find(&team.Members)
 	if len(team.Members) < gameMinNumMembers || len(team.Members) > gameMaxNumMembers {
-		s := fmt.Sprintf("team must contain between %d and %d members", gameMinNumMembers, gameMaxNumMembers)
-		responseJson(w, errors.New(s), nil, 0)
+		responseJson(w, errorWrongNumPlayers, nil, 0)
 		return
 	}
 	if teamCount == 0 {
 		game.Teams = []Team{team}			/* add first team */
 		game.Status = pendingGame
 		db.Save(&game)
-		responseJson(w, nil, nil, 0)
+		responseJson(w, nil, nil, http.StatusAccepted)
 		return
 	}
 	if prevTeam.ID == team.ID {
-		responseJson(w, errors.New("teams cannot be the same"),nil, 0)
+		responseJson(w, errorSameTeam, nil, 0)
 		return
 	}
 	if len(prevTeam.Members) != len(team.Members) {
-		responseJson(w, errors.New("teams must have same number of players"),nil, 0)
+		responseJson(w, errorWrongNumPlayers, nil, 0)
 		return
 	}
 	if isSharedMembers(prevTeam.Members, team.Members) {
-		responseJson(w, errors.New("teams cannot have shared members"),nil, 0)
+		responseJson(w, errorSharedMembers, nil, 0)
 		return
 	}
 
@@ -247,5 +243,5 @@ func addGameTeam(w http.ResponseWriter, r *http.Request) {
 	game.Status = startedGame
 	db.Save(&game)
 	createEmptyStats(&game)
-	responseJson(w, nil,nil, 0)
+	responseJson(w, nil, nil, http.StatusAccepted)
 }
