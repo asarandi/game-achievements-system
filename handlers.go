@@ -32,7 +32,7 @@ func updateGameMemberStats(w http.ResponseWriter, r *http.Request) {
 	}
 	responseJson(w, db.Model(&oldRecord). /* restrict access to some fields via Omit() */
 		Omit("ID", "CreatedAt", "UpdatedAt", "DeletedAt", "GameID", "TeamID", "MemberID", "IsWinner").
-		Updates(&newRecord).Error,&newRecord, http.StatusAccepted)
+		Updates(&newRecord).Error,&oldRecord, http.StatusAccepted)
 }
 
 func getGameWinners(w http.ResponseWriter, r *http.Request) {

@@ -117,15 +117,11 @@ func deleteRecordByID(model, id interface{}) error {
 }
 
 func findAssociationRecords(modelA, idA, assoc, modelB interface{}) error {
-	var count int
 	if err := db.First(modelA, idA).Error; err != nil {
 		return err
 	}
 	if err := db.Model(modelA).Association(assoc.(string)).Find(modelB).Error; err != nil {
 		return err
-	}
-	if count == 0 {
-		return errorRecordNotFound
 	}
 	return nil
 }
