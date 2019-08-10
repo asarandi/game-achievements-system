@@ -1,5 +1,5 @@
 ### intro
-this is my solution to a coding challenge i received when i applied for a job as a backend engineer.
+this is my solution to a coding challenge i received when i applied for a backend engineer position.
 
 the project can be summarized as _**"an achievements system for a fictional online game"**_. please see `SPEC.md` for challenge details.
 
@@ -7,7 +7,7 @@ i decided to implement a restful api in go, so this is a web server connected to
 
 project components:
 - server: https://golang.org/pkg/net/http/
-- routes: https://github.com/gorilla/mux
+- router: https://github.com/gorilla/mux
 - database: https://github.com/jinzhu/gorm
 
 
@@ -37,9 +37,6 @@ endpoint|GET|POST|PUT|DELETE|notes
 /games/{id:}/winners                |&check;|       |       |       |**get** all winning members of a game
 /games/{id:}/members/{id:}/stats    |&check;|       |&check;|       |**get** or **update** game stats for a member;</br>_fields:_ `num_attacks` `num_hits` `amount_damage` `num_kills` `instant_kills` `num_assists` `num_spells` `spells_damage`
 
-
-### config
-by default the server listens on `0.0.0.0:4242` and uses a file `database.sqlite` to store data. these settings are in `config.go` file
 
 ### project files
 
@@ -96,6 +93,13 @@ the test scenario is simple:
 - update member stats
 - close games
 - verify that server awarded correct wins and achievements to qualifying members
+
+to run the tests:
+```shell script
+go test -v
+```
+
+the test will fail if the database file is already populated with data, if that happens just remove `database.sqlite` and re-run the test - or - you could edit `config.go` and set `databaseFile = ":memory:"`
 
 
 ### adding new achievements
@@ -165,7 +169,7 @@ for example to check if a member qualifies for a _"Win-Five-Games-In-A-Row"_ ach
 ```go
 func isWonLastFive(stat Stat) bool {
 	lastFiveStats := []Stat{}
-	db.Order("CreatedAt desc").Limit(5).Joins("JOIN games ON games.ID = stats.game_id AND games.status = ? AND stats.member_id = ?", finishedGame, stat.MemberID).Find(&lastFiveStats)
+	db.Order("CreatedAt desc").Limit(5).Joins("JOIN games ON games.id = stats.game_id AND games.status = ? AND stats.member_id = ?", finishedGame, stat.MemberID).Find(&lastFiveStats)
 	if len(lastFiveStats) == 5 {
 		result := true
 		for i := range lastFiveStats { result = result && lastFiveStats[i].IsWinner }
