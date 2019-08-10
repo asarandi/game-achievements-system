@@ -116,7 +116,7 @@ type Stat struct {
 	NumAssists   uint `json:"num_assists"`
 	NumSpells    uint `json:"num_spells"`
 	SpellsDamage uint `json:"spells_damage"`
-	NumCoins	 uint `json:"num_coins"`		// <<--- we added a new statistic
+	NumCoins     uint `json:"num_coins"`		// <<--- we added a new statistic
 	IsWinner     bool `json:"is_winner"`
 }
 ```
@@ -137,9 +137,9 @@ then, in `achievements.go` we want to add a function which will check if a membe
 ```go
 func isOneUpAward(stat Stat) bool {
 	if stat.NumCoins >= 100 {
-    	return true
-    }
-    return false
+		return true
+	}
+	return false
 }
 ```
 
