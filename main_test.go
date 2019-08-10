@@ -14,8 +14,6 @@ func init() {
 	setRoutes()
 }
 
-var VerboseTest = true		/* print Expected server response and actual Received response */
-
 /* 	ignore these keys when comparing expected response to received response  */
 var ignoreKeys = map[string]interface{}{
 	"ID"			:nil,	// gorm.Model
@@ -34,8 +32,8 @@ func isJsonObjectsEqual(expectedBytes []byte,  receivedBytes []byte) bool {
 	if json.Unmarshal(expectedBytes, &expectedObject) != nil {	panic("json.Unmarshal() failed")	}
 	if json.Unmarshal(receivedBytes, &receivedObject) != nil {	panic("json.Unmarshal() failed")	}
 	for key, value := range receivedObject {
-		if key == "result" {continue}                  										/*compare in next for loop*/
-		if expectedObject[key] != value {return false} 										/*objects are different*/
+		if key == "result" {continue}                                                       /*compare in next for loop*/
+		if expectedObject[key] != value {return false}                                      /*objects are different*/
 	}
 	if receivedObject["result"] == nil && expectedObject["result"] == nil { return true }	/*if result is nil, then objects match*/
 	if _, ok := receivedObject["result"].([]interface{}); ok {
@@ -51,11 +49,11 @@ func isJsonObjectsEqual(expectedBytes []byte,  receivedBytes []byte) bool {
 			}
 			return true
 	}
-	expectedResult := expectedObject["result"].(map[string]interface{}) 					/*handle json object*/
+	expectedResult := expectedObject["result"].(map[string]interface{})                     /*handle json object*/
 	receivedResult := receivedObject["result"].(map[string]interface{})
 	for key, value := range receivedResult {
-        if _, ok := ignoreKeys[key]; ok {continue}     										/*ignore CreatedAt, UpdatedAt, etc*/
-		if expectedResult[key] != value {return false} 										/*objects are different*/
+        if _, ok := ignoreKeys[key]; ok {continue}                                          /*ignore CreatedAt, UpdatedAt, etc*/
+		if expectedResult[key] != value {return false}                                      /*objects are different*/
 	}
 	return true																				/*objects are the same*/
 }
@@ -72,7 +70,7 @@ func requestAndCompareArray(endpoints []string, method string, requestData, expe
 		response.Result = expectedResponseData[i]
 		expectedBytes, err := json.Marshal(response)
 		if err != nil {	panic("json.Marshal() failed") }
-		if !VerboseTest {
+		if verboseTest {
 			var buf1, buf2 bytes.Buffer
 			json.Indent(&buf1, expectedBytes, "", "\t")
 			fmt.Println("EXPECTED\n", buf1.String())
@@ -235,7 +233,7 @@ func TestUpdateGameMemberStats(t *testing.T) {
 		"/games/1/members/3/stats",	//princess peach
 		"/games/1/members/4/stats",	//toad
 		"/games/1/members/5/stats",	//yoshi
-		"/games/1/members/6/stats",	//bowser 
+		"/games/1/members/6/stats",	//bowser
 		"/games/1/members/7/stats",	//bowser jr
 		"/games/1/members/8/stats",	//princess daisy
 		"/games/2/members/1/stats",	//mario
@@ -243,7 +241,7 @@ func TestUpdateGameMemberStats(t *testing.T) {
 		"/games/2/members/3/stats",	//princess peach
 		"/games/2/members/5/stats",	//yoshi
 		"/games/2/members/6/stats",	//bowser
-		"/games/2/members/7/stats",	//bowser jr         
+		"/games/2/members/7/stats",	//bowser jr
 	}
 	method := http.MethodPut		/* PUT */
 	requestData := []interface{}{
@@ -252,7 +250,7 @@ func TestUpdateGameMemberStats(t *testing.T) {
 		Stat{NumHits:3,     NumAttacks:32,  AmountDamage:33,    NumKills:34,  InstantKills:35,  NumAssists:36,  NumSpells:37,  SpellsDamage:38},   //game 1: team 1: member 3: princess peach
 		Stat{NumHits:4,     NumAttacks:42,  AmountDamage:43,    NumKills:44,  InstantKills:45,  NumAssists:46,  NumSpells:47,  SpellsDamage:48},   //game 1: team 1: member 4: toad
 		Stat{NumHits:5,     NumAttacks:52,  AmountDamage:53,    NumKills:54,  InstantKills:55,  NumAssists:56,  NumSpells:57,  SpellsDamage:58},   //game 1: team 2: member 5: yoshi
-		Stat{NumHits:6,     NumAttacks:62,  AmountDamage:63,    NumKills:64,  InstantKills:65,  NumAssists:66,  NumSpells:67,  SpellsDamage:68},   //game 1: team 2: member 6: bowser 
+		Stat{NumHits:6,     NumAttacks:62,  AmountDamage:63,    NumKills:64,  InstantKills:65,  NumAssists:66,  NumSpells:67,  SpellsDamage:68},   //game 1: team 2: member 6: bowser
 		Stat{NumHits:7,     NumAttacks:72,  AmountDamage:73,    NumKills:74,  InstantKills:75,  NumAssists:76,  NumSpells:77,  SpellsDamage:78},   //game 1: team 2: member 7: bowser jr
 		Stat{NumHits:8,     NumAttacks:82,  AmountDamage:83,    NumKills:84,  InstantKills:85,  NumAssists:86,  NumSpells:87,  SpellsDamage:88},   //game 1: team 2: member 8: princess daisy
 		Stat{NumHits:9,     NumAttacks:92,  AmountDamage:93,    NumKills:94,  InstantKills:95,  NumAssists:96,  NumSpells:97,  SpellsDamage:98},   //game 2: team 3: member 1: mario
@@ -260,7 +258,7 @@ func TestUpdateGameMemberStats(t *testing.T) {
 		Stat{NumHits:11,    NumAttacks:112, AmountDamage:99999, NumKills:114, InstantKills:115, NumAssists:116, NumSpells:117, SpellsDamage:118},  //game 2: team 3: member 3: princess peach	    <<-- bruiser
 		Stat{NumHits:12,    NumAttacks:122, AmountDamage:123,   NumKills:124, InstantKills:125, NumAssists:126, NumSpells:127, SpellsDamage:128},  //game 2: team 4: member 5: yoshi
 		Stat{NumHits:13,    NumAttacks:132, AmountDamage:133,   NumKills:134, InstantKills:135, NumAssists:136, NumSpells:137, SpellsDamage:138},  //game 2: team 4: member 6: bowser
-		Stat{NumHits:14,    NumAttacks:142, AmountDamage:143,   NumKills:144, InstantKills:145, NumAssists:146, NumSpells:147, SpellsDamage:148},  //game 2: team 1: member 7: bowser jr     
+		Stat{NumHits:14,    NumAttacks:142, AmountDamage:143,   NumKills:144, InstantKills:145, NumAssists:146, NumSpells:147, SpellsDamage:148},  //game 2: team 1: member 7: bowser jr
 	}
 	responseData := requestData
 	response := Response{Success: true, Code: 202, Message: "ok", Result: nil}
@@ -355,7 +353,6 @@ func TestGetGameWinnersAfter(t *testing.T) {
 	method := http.MethodGet		/* GET */
 	requestData := make([]interface{}, 2)
 	responseData := []interface{}{
-
 		/*for game #1, team #2 had better combined stats than team #1; team #2 wins*/
 		[]interface{}{
 			Member{Name: "Yoshi", Img: "https://upload.wikimedia.org/wikipedia/en/d/d9/YoshiMarioParty10.png"},
@@ -363,7 +360,6 @@ func TestGetGameWinnersAfter(t *testing.T) {
 			Member{Name: "Bowser Jr.", Img: "https://upload.wikimedia.org/wikipedia/en/d/d2/Bowser_Jr.png"},
 			Member{Name: "Princess Daisy", Img: "https://upload.wikimedia.org/wikipedia/en/b/bd/Daisy_%28Super_Mario_Party%29.png"},
 		},
-
 		/*for game #2, team #4 had better combined stats than team #3; team #4 wins*/
 		[]interface{}{
 			Member{Name: "Yoshi", Img: "https://upload.wikimedia.org/wikipedia/en/d/d9/YoshiMarioParty10.png"},

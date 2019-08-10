@@ -72,14 +72,7 @@ func initDatabase() {
 	get all records where .. condition a b c
 */
 func getAllRecordsWhereABC(model, a, b, c interface{}) error {
-	var count int
-	if err := db.Where(a, b, c).Find(model).Count(&count).Error; err != nil {
-		return err
-	}
-	if count == 0 {
-		return errorRecordNotFound
-	}
-	return nil
+	return db.Where(a, b, c).Find(model).Error
 }
 
 func getRecordWhereABC(model, a, b, c interface{}) error {
@@ -91,14 +84,7 @@ func createFromModel(model interface{}) error {
 }
 
 func getAllRecords(model interface{}) error {
-	var count int
-	if err := db.Find(model).Count(&count).Error; err != nil {
-		return err
-	}
-	if count == 0 {
-		return errorRecordNotFound
-	}
-	return nil
+	return db.Find(model).Error
 }
 
 func getRecordByID(model, id interface{}) error {
