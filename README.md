@@ -98,7 +98,82 @@ the test scenario is simple:
 - verify that server awarded correct wins and achievements to qualifying members
 
 
+### adding new achievements
+to address `SPEC.md` requirement #7, "_add a new statistic and create a new achievement .._":
 
+to add a simple statistic like "number of collected coins" during a game we would simply add it to our `Stat` object which is defined in `models.go`; it might look like this:
+```go
+type Stat struct {
+	gorm.Model
+	GameID       uint `json:"game_id"`
+	TeamID       uint `json:"team_id"`
+	MemberID     uint `json:"member_id"`
+	NumAttacks   uint `json:"num_attacks"`
+	NumHits      uint `json:"num_hits"`
+	AmountDamage uint `json:"amount_damage"`
+	NumKills     uint `json:"num_kills"`
+	InstantKills uint `json:"instant_kills"`
+	NumAssists   uint `json:"num_assists"`
+	NumSpells    uint `json:"num_spells"`
+	SpellsDamage uint `json:"spells_damage"`
+	NumCoins	 uint `json:"num_coins"`		// <<--- we added a new statistic
+	IsWinner     bool `json:"is_winner"`
+}
+```
+
+next, we want to add the achievement to the database; here is one way of doing that:
+
+```sh
+curl -X POST 0.0.0.0:4242/achievements --data '{"name": "1UP", "slug": "oneup", "desc": "You have collected 100 or more coins during a single game! Wow!", "img": "https://www.pngfind.com/pngs/m/22-226955_mario-mushroom-png-mario-1-up-mushroom-transparent.png"}'
+```
+
+if successful, the server replies ` "success":true, "code":201 `
+```sh
+{"success":true,"code":201,"message":"ok","result":{"ID":5,"CreatedAt":"2019-08-09T23:44:41.040203-07:00","UpdatedAt":"2019-08-09T23:44:41.040203-07:00","DeletedAt":null,"slug":"oneup","name":"1UP","desc":"You have collected 100 or more coins during a single game! Wow!","img":"https://www.pngfind.com/pngs/m/22-226955_mario-mushroom-png-mario-1-up-mushroom-transparent.png"}}
+```
+
+
+then, in `achievements.go` we want to add a function which will check if a member qualifies for the achievement; function signature should be `func (Stat) bool` it might look like this:
+```go
+func isOneUpAward(stat Stat) bool {
+	if stat.NumCoins >= 100 {
+    	return true
+    }
+    return false
+}
+```
+
+we also have to "register" the achievement by adding it to the `asf` list which is in `achievements.go`;
+```
+    asf = []typeAsf{
+		{achievement: Achievement{}, slug: "sharpshooter", function: isSharpshooterAward},
+		{achievement: Achievement{}, slug: "bruiser", function: isBruiserAward},
+		{achievement: Achievement{}, slug: "veteran", function: isVeteranAward},
+		{achievement: Achievement{}, slug: "bigwinner", function: isBigwinnerAward},
+		{achievement: Achievement{}, slug: "oneup", function: isOneUpAward},		// <<--- 1UP new achievement
+	}
+```
+it is important that the `slug` field matches the `slug` that we previously inserted into database.
+
+last step is to restart the server. at the end of each game the new achievement will be awarded to qualifying members.
+
+##### note:
+
+we can create more interesting achievements by using sql capabilities of the database,
+
+for example to check if a member qualifies for a _"Win-Five-Games-In-A-Row"_ achievement:
+```go
+func isWonLastFive(stat Stat) bool {
+	lastFiveStats := []Stat{}
+	db.Order("CreatedAt desc").Limit(5).Joins("JOIN games ON games.ID = stats.game_id AND games.status = ? AND stats.member_id = ?", finishedGame, stat.MemberID).Find(&lastFiveStats)
+	if len(lastFiveStats) == 5 {
+		result := true
+		for i := range lastFiveStats { result = result && lastFiveStats[i].IsWinner }
+		return result
+	}
+	return false;
+}
+```
 
 
 ### references
